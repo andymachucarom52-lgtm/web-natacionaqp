@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organización de Natación - Portal Oficial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Encabezado y Navegación -->
+  <header>
+    <h1>Portal de Natación</h1>
+    <nav>
+      <a href="#vivo">Resultados en Vivo</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- SECCIÓN 1: Resultados en vivo (App de Netlify) -->
+    <section id="vivo" class="contenedor-seccion">
+      <h2>Competencia en Tiempo Real</h2>
+      <p>Sigue los resultados en vivo de las pruebas actuales:</p>
+      <div class="iframe-container">
+        <!-- Reemplaza la URL de abajo por la URL real de tu app en Netlify -->
+        <iframe src="https://tu-app-resultados.netlify.app" allow="fullscreen" loading="lazy"></iframe>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 5: Contacto -->
+    <section id="contacto" class="contenedor-seccion">
+      <h2>Contacto y Consultas</h2>
+      <form id="form-contacto">
+        <label for="nombre">Nombre completo / Club:</label>
+        <input type="text" id="nombre" name="nombre" required placeholder="Ej. Juan Pérez">
+
+        <label for="correo">Correo Electrónico:</label>
+        <input type="email" id="correo" name="correo" required placeholder="correo@ejemplo.com">
+
+        <label for="mensaje">Mensaje o Consulta:</label>
+        <textarea id="mensaje" name="mensaje" rows="4" required placeholder="Escribe tu consulta aquí..."></textarea>
+
+        <button type="submit">Enviar Mensaje</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Organización de Natación. Todos los derechos reservados.</p>
+  </footer>
+
+</body>
+</html>
