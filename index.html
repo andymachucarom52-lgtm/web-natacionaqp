@@ -28,20 +28,29 @@
       </div>
     </section>
 
-    <!-- SECCIÓN 5: Contacto -->
+   <!-- SECCIÓN 5: Contacto vía WhatsApp -->
     <section id="contacto" class="contenedor-seccion">
-      <h2>Contacto y Consultas</h2>
-      <form id="form-contacto">
+      <h2>Contacto Directo vía WhatsApp</h2>
+      <p>Llena los datos a continuación para iniciar una conversación con la organización:</p>
+
+      <form id="form-whatsapp">
         <label for="nombre">Nombre completo / Club:</label>
-        <input type="text" id="nombre" name="nombre" required placeholder="Ej. Juan Pérez">
+        <input type="text" id="nombre" required placeholder="Ej. Juan Pérez - Club Acuático">
 
-        <label for="correo">Correo Electrónico:</label>
-        <input type="email" id="correo" name="correo" required placeholder="correo@ejemplo.com">
+        <label for="asunto">Asunto o Tipo de Consulta:</label>
+        <select id="asunto" required>
+          <option value="Inscripciones">Inscripciones</option>
+          <option value="Resultados / Tiempos">Resultados / Tiempos</option>
+          <option value="Certificados / Acreditaciones">Certificados / Acreditaciones</option>
+          <option value="Consulta General">Consulta General</option>
+        </select>
 
-        <label for="mensaje">Mensaje o Consulta:</label>
-        <textarea id="mensaje" name="mensaje" rows="4" required placeholder="Escribe tu consulta aquí..."></textarea>
+        <label for="mensaje">Mensaje:</label>
+        <textarea id="mensaje" rows="4" required placeholder="Escribe tu consulta detallada aquí..."></textarea>
 
-        <button type="submit">Enviar Mensaje</button>
+        <button type="submit" style="background-color: #25D366; color: white;">
+          💬 Enviar a WhatsApp
+        </button>
       </form>
     </section>
   </main>
@@ -50,5 +59,30 @@
     <p>&copy; 2026 Organización de Natación. Todos los derechos reservados.</p>
   </footer>
 
+  <!-- Script para formatear y redirigir a WhatsApp -->
+  <script>
+    document.getElementById('form-whatsapp').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // ⚠️ REEMPLAZA ESTE NÚMERO POR EL TUYO (incluye código de país sin el signo +)
+      // Ejemplo para Perú (+51): "51987654321"
+      const numeroTelefono = "51959316166"; 
+
+      const nombre = document.getElementById('nombre').value;
+      const asunto = document.getElementById('asunto').value;
+      const mensaje = document.getElementById('mensaje').value;
+
+      // Estructura del texto con formato de WhatsApp
+      const textoMensaje = `*CONSULTA DESDE LA WEB DE NATACIÓN*%0A%0A` +
+                           `*Nombre / Club:* ${encodeURIComponent(nombre)}%0A` +
+                           `*Asunto:* ${encodeURIComponent(asunto)}%0A` +
+                           `*Mensaje:* ${encodeURIComponent(mensaje)}`;
+
+      const urlWhatsApp = `https://wa.me/${numeroTelefono}?text=${textoMensaje}`;
+
+      // Abrir WhatsApp en una nueva pestaña
+      window.open(urlWhatsApp, '_blank');
+    });
+  </script>
 </body>
 </html>
