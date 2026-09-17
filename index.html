@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Organización de Natación - Portal Oficial</title>
+  <title>Natación Arequipa - Portal Oficial</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <!-- Encabezado y Navegación -->
   <header>
-    <h1>Portal de Natación</h1>
+    <h1>Natación Arequipa</h1>
     <nav>
       <a href="#vivo">Resultados en Vivo</a>
       <a href="#contacto">Contacto</a>
@@ -18,17 +18,25 @@
   </header>
 
   <main>
-    <!-- SECCIÓN 1: Resultados en vivo (App de Netlify) -->
+    <!-- SECCIÓN 1: Enlace directo a la App de Netlify -->
     <section id="vivo" class="contenedor-seccion">
       <h2>Competencia en Tiempo Real</h2>
-      <p>Sigue los resultados en vivo de las pruebas actuales:</p>
-      <div class="iframe-container">
-        <!-- Reemplaza la URL de abajo por la URL real de tu app en Netlify -->
-        <iframe src="https://aquasplashmovile.netlify.app" allow="fullscreen" loading="lazy"></iframe>
+      <p>Sigue los resultados en vivo y los tiempos simultáneos de las competencias oficiales:</p>
+      
+      <div style="text-align: center; padding: 30px 10px; background-color: #eef9fa; border-radius: 8px; border: 1px solid #b2e2e2; margin-top: 15px;">
+        <span style="font-size: 3rem; display: block; margin-bottom: 10px;">⏱️</span>
+        <h3 style="margin: 0 0 10px 0; color: #005f73;">Plataforma de Resultados en Vivo</h3>
+        <p style="margin-bottom: 20px; color: #555;">Haz clic en el siguiente botón para abrir la aplicación de resultados en tiempo real:</p>
+        
+        <!-- ⚠️ REEMPLAZA ESTE ENLACE POR TU URL REAL DE NETLIFY -->
+        <a href="https://tu-app-resultados.netlify.app" target="_blank" rel="noopener noreferrer" 
+           style="display: inline-block; background-color: #0a9396; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 1.1rem; transition: background-color 0.2s;">
+          🚀 Ir a Resultados en Vivo
+        </a>
       </div>
     </section>
 
-   <!-- SECCIÓN 5: Contacto vía WhatsApp -->
+    <!-- SECCIÓN 5: Contacto vía WhatsApp -->
     <section id="contacto" class="contenedor-seccion">
       <h2>Contacto Directo vía WhatsApp</h2>
       <p>Llena los datos a continuación para iniciar una conversación con la organización:</p>
@@ -48,7 +56,7 @@
         <label for="mensaje">Mensaje:</label>
         <textarea id="mensaje" rows="4" required placeholder="Escribe tu consulta detallada aquí..."></textarea>
 
-        <button type="submit" style="background-color: #25D366; color: white;">
+        <button type="submit" style="background-color: #25D366; color: white; margin-top: 10px;">
           💬 Enviar a WhatsApp
         </button>
       </form>
@@ -56,7 +64,7 @@
   </main>
 
   <footer>
-    <p>&copy; 2026 Organización de Natación. Todos los derechos reservados.</p>
+    <p>&copy; 2026 Natación Arequipa. Todos los derechos reservados.</p>
   </footer>
 
   <!-- Script para formatear y redirigir a WhatsApp -->
@@ -64,23 +72,19 @@
     document.getElementById('form-whatsapp').addEventListener('submit', function(e) {
       e.preventDefault();
 
-      // ⚠️ REEMPLAZA ESTE NÚMERO POR EL TUYO (incluye código de país sin el signo +)
-      // Ejemplo para Perú (+51): "51987654321"
+      // ⚠️ REEMPLAZA POR TU NÚMERO DE TELÉFONO CON CÓDIGO DE PAÍS
       const numeroTelefono = "51959316166"; 
 
       const nombre = document.getElementById('nombre').value;
       const asunto = document.getElementById('asunto').value;
       const mensaje = document.getElementById('mensaje').value;
 
-      // Estructura del texto con formato de WhatsApp
-      const textoMensaje = `*CONSULTA DESDE LA WEB DE NATACIÓN*%0A%0A` +
+      const textoMensaje = `*CONSULTA - NATACIÓN AREQUIPA*%0A%0A` +
                            `*Nombre / Club:* ${encodeURIComponent(nombre)}%0A` +
                            `*Asunto:* ${encodeURIComponent(asunto)}%0A` +
                            `*Mensaje:* ${encodeURIComponent(mensaje)}`;
 
       const urlWhatsApp = `https://wa.me/${numeroTelefono}?text=${textoMensaje}`;
-
-      // Abrir WhatsApp en una nueva pestaña
       window.open(urlWhatsApp, '_blank');
     });
   </script>
