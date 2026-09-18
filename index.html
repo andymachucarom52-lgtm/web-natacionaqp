@@ -4,61 +4,75 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Natación Arequipa - Portal Oficial</title>
+  <!-- Google Fonts para fuentes adicionales elegantes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Great+Vibes&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Encabezado con Logo estático y Título -->
-  <header style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px 20px;">
-    <img src="logo.png" alt="Logo Natación Arequipa" style="height: 240px; width: auto; object-fit: contain; pointer-events: none;">
-    <h1 style="margin: 0;">Natación Arequipa</h1>
-  </header>
-
-  <!-- Navegación con enlace al Calendario incluido -->
-  <nav style="text-align: center; background-color: #004d5a; padding: 10px;">
-    <a href="#vivo" style="color: white; margin: 0 15px; text-decoration: none;">Resultados en Vivo</a>
-    <a href="#calendario" style="color: white; margin: 0 15px; text-decoration: none;">Calendario</a>
-    <a href="#contacto" style="color: white; margin: 0 15px; text-decoration: none;">Contacto</a>
+  <!-- Barra de Navegación Superior -->
+  <nav class="barra-navegacion">
+    <ul>
+      <li><a href="#vivo">Competencias en Vivo</a></li>
+      <li><a href="#calendario">Calendario</a></li>
+      <li><a href="#inscripciones">Inscripciones en Vivo</a></li>
+      <li><a href="#resultados-anteriores">Resultados Anteriores</a></li>
+      <li><a href="#contacto">Contáctanos</a></li>
+    </ul>
   </nav>
 
+  <!-- Encabezado con Línea Azul / Agua de Piscina -->
+  <header class="encabezado-piscina">
+    <div class="linea-piscina">
+      <img src="logo.png" alt="Logo Natación Arequipa" class="logo-izq">
+      <h1 class="titulo-3d">Natación Arequipa</h1>
+    </div>
+  </header>
+
   <main>
-    <!-- SECCIÓN 1: Enlace directo a la App de Netlify -->
+    <!-- SECCIÓN 1: Competencias en Vivo -->
     <section id="vivo" class="contenedor-seccion">
-      <h2>Competencia en Tiempo Real</h2>
-      <p>Sigue los resultados en vivo y los tiempos simultáneos de las competencias oficiales:</p>
-      
-      <div style="text-align: center; padding: 30px 10px; background-color: #eef9fa; border-radius: 8px; border: 1px solid #b2e2e2; margin-top: 15px;">
-        <span style="font-size: 3rem; display: block; margin-bottom: 10px;">⏱️</span>
-        <h3 style="margin: 0 0 10px 0; color: #005f73;">Plataforma de Resultados en Vivo</h3>
-        <p style="margin-bottom: 20px; color: #555;">Haz clic en el siguiente botón para abrir la aplicación de resultados en tiempo real:</p>
-        
-        <a href="https://aquasplashmovile.netlify.app" target="_blank" rel="noopener noreferrer" 
-           style="display: inline-block; background-color: #0a9396; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 1.1rem; transition: background-color 0.2s;">
+      <h2>Competencias en Vivo</h2>
+      <p>Sigue los resultados en tiempo real de los eventos oficiales:</p>      
+      <div class="tarjeta-enlace">
+        <span class="icono-emoji">⏱️</span>
+        <h3>Plataforma de Resultados en Vivo</h3>
+        <p>Haz clic en el siguiente botón para abrir la aplicación en vivo:</p>
+        <a href="https://aquasplashmovile.netlify.app" target="_blank" rel="noopener noreferrer" class="btn-primario">
           🚀 Ir a Resultados en Vivo
         </a>
       </div>
     </section>
 
-    <!-- SECCIÓN 4: Calendario de Competencias Confirmadas -->
+    <!-- SECCIÓN 2: Calendario -->
     <section id="calendario" class="contenedor-seccion">
       <h2>Calendario de Competencias Confirmadas</h2>
-      <p>Consulta las fechas, sedes y horarios de nuestros próximos eventos oficiales:</p>
-      
-      <div style="width: 100%; max-width: 900px; margin: 20px auto; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+      <p>Consulta las fechas, sedes y horarios de los próximos eventos:</p>
+      <div class="contenedor-iframe">
         <iframe src="https://calendar.google.com/calendar/embed?src=bf831fe589c0ef4c5f3ff045b8973fb280dd17f4b7a1ee1b4e6f77cf6c166f17%40group.calendar.google.com&ctz=America%2FLima" 
-                style="border: 0;" 
-                width="100%" 
-                height="600" 
-                frameborder="0" 
-                scrolling="no">
+                style="border: 0;" width="100%" height="600" frameborder="0" scrolling="no">
         </iframe>
       </div>
     </section>
 
-    <!-- SECCIÓN 5: Contacto vía WhatsApp -->
+    <!-- SECCIÓN 3: Inscripciones en Vivo -->
+    <section id="inscripciones" class="contenedor-seccion">
+      <h2>Inscripciones en Vivo</h2>
+      <p>Proximamente habilitaremos el módulo de inscripciones en línea para clubes y deportistas.</p>
+    </section>
+
+    <!-- SECCIÓN 4: Resultados Anteriores -->
+    <section id="resultados-anteriores" class="contenedor-seccion">
+      <h2>Resultados de Competencias Anteriores</h2>
+      <p>Histórico de tiempos y planillas oficiales de torneos pasados.</p>
+    </section>
+
+    <!-- SECCIÓN 5: Contáctanos (WhatsApp) -->
     <section id="contacto" class="contenedor-seccion">
-      <h2>Contacto Directo vía WhatsApp</h2>
-      <p>Llena los datos a continuación para iniciar una conversación con la organización:</p>
+      <h2>Contáctanos vía WhatsApp</h2>
+      <p>Llena tus datos para iniciar una conversación directa con la organización:</p>
 
       <form id="form-whatsapp">
         <label for="nombre">Nombre completo / Club:</label>
@@ -75,24 +89,22 @@
         <label for="mensaje">Mensaje:</label>
         <textarea id="mensaje" rows="4" required placeholder="Escribe tu consulta detallada aquí..."></textarea>
 
-        <button type="submit" style="background-color: #25D366; color: white; margin-top: 10px;">
+        <button type="submit" class="btn-whatsapp">
           💬 Enviar a WhatsApp
         </button>
       </form>
     </section>
   </main>
 
+  <!-- Pie de página institucional -->
   <footer>
-    <p>&copy; 2026 Natación Arequipa. Todos los derechos reservados.</p>
+    <p>Cuerpo de jueces de natación competitiva, Arequipa, Perú, afiliados a la Federación Deportiva Nacional de Deportes Acuáticos</p>
   </footer>
 
-  <!-- Script para formatear y redirigir a WhatsApp -->
   <script>
     document.getElementById('form-whatsapp').addEventListener('submit', function(e) {
       e.preventDefault();
-
       const numeroTelefono = "51959316166"; 
-
       const nombre = document.getElementById('nombre').value;
       const asunto = document.getElementById('asunto').value;
       const mensaje = document.getElementById('mensaje').value;
@@ -102,8 +114,7 @@
                            `*Asunto:* ${encodeURIComponent(asunto)}%0A` +
                            `*Mensaje:* ${encodeURIComponent(mensaje)}`;
 
-      const urlWhatsApp = `https://wa.me/${numeroTelefono}?text=${textoMensaje}`;
-      window.open(urlWhatsApp, '_blank');
+      window.open(`https://wa.me/${numeroTelefono}?text=${textoMensaje}`, '_blank');
     });
   </script>
 </body>
