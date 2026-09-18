@@ -8,16 +8,17 @@
 </head>
 <body>
 
- <!-- Encabezado con Logo estático y Título -->
+  <!-- Encabezado con Logo estático y Título -->
   <header style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px 20px;">
-    <!-- Muestra tu archivo logo.jpg sin enlaces ni interacción -->
     <img src="logo.png" alt="Logo Natación Arequipa" style="height: 240px; width: auto; object-fit: contain; pointer-events: none;">
     <h1 style="margin: 0;">Natación Arequipa</h1>
   </header>
 
+  <!-- Navegación con enlace al Calendario incluido -->
   <nav style="text-align: center; background-color: #004d5a; padding: 10px;">
-    <a href="#vivo">Resultados en Vivo</a>
-    <a href="#contacto">Contacto</a>
+    <a href="#vivo" style="color: white; margin: 0 15px; text-decoration: none;">Resultados en Vivo</a>
+    <a href="#calendario" style="color: white; margin: 0 15px; text-decoration: none;">Calendario</a>
+    <a href="#contacto" style="color: white; margin: 0 15px; text-decoration: none;">Contacto</a>
   </nav>
 
   <main>
@@ -31,20 +32,19 @@
         <h3 style="margin: 0 0 10px 0; color: #005f73;">Plataforma de Resultados en Vivo</h3>
         <p style="margin-bottom: 20px; color: #555;">Haz clic en el siguiente botón para abrir la aplicación de resultados en tiempo real:</p>
         
-        <!-- ⚠️ REEMPLAZA ESTE ENLACE POR TU URL REAL DE NETLIFY -->
         <a href="https://aquasplashmovile.netlify.app" target="_blank" rel="noopener noreferrer" 
            style="display: inline-block; background-color: #0a9396; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 1.1rem; transition: background-color 0.2s;">
           🚀 Ir a Resultados en Vivo
         </a>
       </div>
     </section>
-<!-- SECCIÓN 4: Calendario de Competencias Confirmadas -->
+
+    <!-- SECCIÓN 4: Calendario de Competencias Confirmadas -->
     <section id="calendario" class="contenedor-seccion">
       <h2>Calendario de Competencias Confirmadas</h2>
       <p>Consulta las fechas, sedes y horarios de nuestros próximos eventos oficiales:</p>
       
       <div style="width: 100%; max-width: 900px; margin: 20px auto; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-        <!-- ⚠️ Reemplaza el src con la URL de tu Google Calendar público -->
         <iframe src="https://calendar.google.com/calendar/embed?src=bf831fe589c0ef4c5f3ff045b8973fb280dd17f4b7a1ee1b4e6f77cf6c166f17%40group.calendar.google.com&ctz=America%2FLima" 
                 style="border: 0;" 
                 width="100%" 
@@ -54,6 +54,7 @@
         </iframe>
       </div>
     </section>
+
     <!-- SECCIÓN 5: Contacto vía WhatsApp -->
     <section id="contacto" class="contenedor-seccion">
       <h2>Contacto Directo vía WhatsApp</h2>
@@ -90,7 +91,6 @@
     document.getElementById('form-whatsapp').addEventListener('submit', function(e) {
       e.preventDefault();
 
-      // ⚠️ REEMPLAZA POR TU NÚMERO DE TELÉFONO CON CÓDIGO DE PAÍS
       const numeroTelefono = "51959316166"; 
 
       const nombre = document.getElementById('nombre').value;
