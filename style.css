@@ -82,7 +82,7 @@ body {
 
 /* Logo alineado a la izquierda sobre la línea */
 .logo-izq {
-  height: 120px;
+  height: 240px;
   width: auto;
   object-fit: contain;
   pointer-events: none;
@@ -128,37 +128,50 @@ main {
   padding-bottom: 5px;
 }
 
-/* Tarjeta de enlace */
-.tarjeta-enlace {
-  text-align: center;
-  padding: 30px 10px;
+/* 3. Ajuste para competencias en tiempo real (Alineado a la derecha) */
+.contenedor-flex-derecha {
+  display: flex;
+  justify-content: flex-end;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.tarjeta-derecha {
   background-color: #eef9fa;
-  border-radius: 8px;
-  border: 1px solid #b2e2e2;
-  margin-top: 15px;
+  border: 2px solid #00a896;
+  border-radius: 10px;
+  padding: 15px 20px;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.icono-emoji {
-  font-size: 3rem;
+.tarjeta-derecha h2 {
+  font-size: 1.1rem;
+  color: #005f73;
+  margin-bottom: 12px;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+
+.btn-aquasplash {
   display: block;
-  margin-bottom: 10px;
-}
-
-.btn-primario {
-  display: inline-block;
   background-color: #0a9396;
-  color: white;
-  padding: 12px 25px;
+  color: #ffffff;
+  padding: 10px 15px;
   text-decoration: none;
   font-weight: bold;
-  border-radius: 5px;
-  font-size: 1.1rem;
-  transition: background-color 0.2s;
-  margin-top: 15px;
+  font-size: 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
 }
 
-.btn-primario:hover {
+.btn-aquasplash:hover {
   background-color: #005f73;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 /* Formulario WhatsApp */
@@ -204,7 +217,7 @@ main {
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* 3. Pie de página institucional */
+/* 4. Pie de página institucional */
 footer {
   background-color: var(--color-nav-fondo);
   color: #ffffff;
@@ -214,7 +227,7 @@ footer {
   font-size: 0.95rem;
 }
 
-/* Responsivo para celulares */
+/* Adaptación para pantallas móviles */
 @media (max-width: 768px) {
   .linea-piscina {
     flex-direction: column;
@@ -229,5 +242,13 @@ footer {
   .barra-navegacion ul {
     flex-direction: column;
     gap: 8px;
+  }
+
+  .contenedor-flex-derecha {
+    justify-content: center;
+  }
+  
+  .tarjeta-derecha {
+    max-width: 100%;
   }
 }
