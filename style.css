@@ -6,7 +6,6 @@
   --color-nav-texto: #ffffff;
   --color-titulo: #000000;           /* Color del título principal */
   
-  /* Tipografía del título principal (Script MT Bold con fallbacks) */
   --fuente-titulo: 'Script MT Bold', 'Dancing Script', 'Great Vibes', cursive, sans-serif;
   --fuente-cuerpo: 'Montserrat', Arial, sans-serif;
 }
@@ -80,7 +79,6 @@ body {
   gap: 25px;
 }
 
-/* Logo alineado a la izquierda sobre la línea */
 .logo-izq {
   height: 240px;
   width: auto;
@@ -89,15 +87,12 @@ body {
   filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.15));
 }
 
-/* Título en 3D con Fuente Script MT Bold y Sombra de Color Negro */
 .titulo-3d {
   font-family: var(--fuente-titulo);
   font-size: 3.5rem;
   font-weight: bold;
   color: var(--color-titulo);
   margin: 0;
-  
-  /* Efecto 3D con sombras multicapa */
   text-shadow: 
     1px 1px 0px #cccccc,
     2px 2px 0px #bbbbbb,
@@ -106,29 +101,13 @@ body {
     5px 7px 10px rgba(0, 0, 0, 0.4);
 }
 
-/* Contenedor principal de secciones */
 main {
   max-width: 1100px;
   margin: 30px auto;
   padding: 0 15px;
 }
 
-.contenedor-seccion {
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.contenedor-seccion h2 {
-  color: #005f73;
-  margin-bottom: 10px;
-  border-bottom: 2px solid var(--color-fondo-linea);
-  padding-bottom: 5px;
-}
-
-/* 3. Recuadro flotante alineado a la derecha */
+/* Recuadro flotante a la derecha */
 .contenedor-flotante-derecha {
   display: flex;
   justify-content: flex-end;
@@ -151,8 +130,6 @@ main {
   font-size: 1.1rem;
   color: #005f73;
   margin-bottom: 12px;
-  border-bottom: none !important;
-  padding-bottom: 0 !important;
 }
 
 .btn-aquasplash {
@@ -170,7 +147,95 @@ main {
 .btn-aquasplash:hover {
   background-color: #005f73;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Muro de Novedades y Multimedia */
+.muro-destacado {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.muro-destacado h2 {
+  color: #005f73;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--color-fondo-linea);
+  padding-bottom: 5px;
+}
+
+.muro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.tarjeta-media {
+  background-color: #f4fbfb;
+  border: 1px solid #cbeceb;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.tarjeta-media h3 {
+  color: #003845;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* ESTILOS PARA LOS ACORDEONES DESPLEGABLES */
+.acordeon-seccion {
+  background: #ffffff;
+  border: 1px solid #b2e2e2;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  transition: all 0.3s ease;
+}
+
+.acordeon-seccion[open] {
+  border-color: #00a896;
+  box-shadow: 0 4px 12px rgba(0, 168, 150, 0.15);
+}
+
+.acordeon-titulo {
+  background-color: #eef9fa;
+  color: #005f73;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 15px 20px;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.acordeon-titulo::-webkit-details-marker {
+  display: none;
+}
+
+.acordeon-titulo::after {
+  content: "➕";
+  font-size: 1rem;
+}
+
+.acordeon-seccion[open] .acordeon-titulo::after {
+  content: "➖";
+}
+
+.acordeon-titulo:hover {
+  background-color: #e0f4f7;
+}
+
+.acordeon-contenido {
+  padding: 20px;
+  border-top: 1px solid #e0f4f7;
 }
 
 /* Formulario WhatsApp */
@@ -207,16 +272,13 @@ main {
   background-color: #1ebe57;
 }
 
-/* Contenedor iframe */
 .contenedor-iframe {
   width: 100%;
   margin-top: 15px;
   overflow: hidden;
   border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* 4. Pie de página institucional */
 footer {
   background-color: var(--color-nav-fondo);
   color: #ffffff;
@@ -226,7 +288,6 @@ footer {
   font-size: 0.95rem;
 }
 
-/* Adaptación para pantallas móviles */
 @media (max-width: 768px) {
   .linea-piscina {
     flex-direction: column;
@@ -245,9 +306,5 @@ footer {
 
   .contenedor-flotante-derecha {
     justify-content: center;
-  }
-  
-  .tarjeta-derecha {
-    max-width: 100%;
   }
 }
