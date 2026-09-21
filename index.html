@@ -178,9 +178,9 @@
   </footer>
 
   <script>
-    // Inicialización con las claves de tu proyecto en Supabase
+    // Configuración de conexión a Supabase
     const SUPABASE_URL = "https://uzzelqylxzggnjdevrcu.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_FIisK0H2qX8fNaJNtLByeA_IU4nYT6-"; // ⚠️ Recuerda pegar tu clave completa de Supabase
+    const SUPABASE_KEY = "PEGA_AQUI_TU_PUBLISHABLE_KEY_COMPLETA"; // ⚠️ Reemplaza por tu Publishable Key completa de Supabase
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const CLAVE_CORRECTA = "Arequipa2026*"; 
@@ -219,6 +219,16 @@
         .replace(/[^a-zA-Z0-9.-]/g, "_");
     }
 
+    // Función para transformar URL estándar de TikTok a su formato 'embed' incrustable
+    function obtenerUrlEmbedTikTok(urlOriginal) {
+      if (!urlOriginal.includes('tiktok.com')) return urlOriginal;
+      const match = urlOriginal.match(/\/video\/(\d+)/);
+      if (match && match[1]) {
+        return `https://www.tiktok.com/embed/v2/${match[1]}`;
+      }
+      return urlOriginal;
+    }
+
     // Subir publicación al Muro Central
     async function subirPublicacion() {
       const titulo = document.getElementById('post-titulo').value;
@@ -240,7 +250,9 @@
         if (error) return alert("Error al subir archivo: " + error.message);
         urlMedia = `${SUPABASE_URL}/storage/v1/object/public/novedades/${fileName}`;
       } else {
-        urlMedia = document.getElementById('post-url-tiktok').value;
+        const rawUrl = document.getElementById('post-url-tiktok').value;
+        if (!rawUrl) return alert("Ingresa el enlace del video.");
+        urlMedia = obtenerUrlEmbedTikTok(rawUrl);
       }
 
       const { error: dbError } = await supabaseClient.from('publicaciones').insert([
@@ -294,7 +306,8 @@
         if (post.tipo === 'imagen') {
           contenidoMedia = `<img src="${post.url_media}" alt="${post.titulo}" class="img-post">`;
         } else if (post.tipo === 'tiktok') {
-          contenidoMedia = `<iframe src="${post.url_media}" allow="fullscreen" frameborder="0" style="width: 100%; height: 480px; border-radius: 8px;"></iframe>`;
+          const embedUrl = obtenerUrlEmbedTikTok(post.url_media);
+          contenidoMedia = `<iframe src="${embedUrl}" allow="fullscreen" frameborder="0" style="width: 100%; height: 580px; border-radius: 8px;"></iframe>`;
         }
 
         return `
