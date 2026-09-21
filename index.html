@@ -9,6 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Great+Vibes&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  
+  <!-- SDK de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -60,7 +63,11 @@
       <details class="acordeon-seccion" id="resultados-anteriores">
         <summary class="acordeon-titulo">🏆 Resultados Anteriores</summary>
         <div class="acordeon-contenido">
-          <p>Histórico de tiempos y planillas oficiales de torneos pasados.</p>
+          <p>Planillas e históricos de competencias anteriores:</p>
+          <!-- Contenedor dinámico de PDFs cargados desde Supabase -->
+          <ul id="lista-pdf-resultados" class="lista-resultados">
+            <li>Cargando resultados...</li>
+          </ul>
         </div>
       </details>
 
@@ -88,49 +95,17 @@
       </details>
     </aside>
 
-    <!-- COLUMNA CENTRAL: Muro de Publicaciones y Videos (Estilo Feed de Facebook) -->
+    <!-- COLUMNA CENTRAL: Muro Dinámico de Publicaciones -->
     <main class="columna-centro">
       <div class="muro-publicacion">
         <h2>📣 Novedades y Destacados</h2>
         <p>Revive las mejores pruebas y entérate de los próximos eventos:</p>
       </div>
 
-      <!-- Publicación 1: Video de TikTok -->
-      <article class="tarjeta-post">
-        <div class="post-header">
-          <span class="post-icono">🎬</span>
-          <div>
-            <h3>Video Destacado</h3>
-            <span class="post-fecha">Publicado recientemente</span>
-          </div>
-        </div>
-        <div class="post-body">
-          <p>Revive los mejores momentos de las últimas competencias oficiales:</p>
-          <div class="contenedor-tiktok">
-            <!-- ⚠️ Reemplaza este iframe por el código Embed de tu video de TikTok -->
-            <iframe src="https://www.tiktok.com/player/v1/7123456789012345678" 
-                    allow="fullscreen" 
-                    frameborder="0" 
-                    style="width: 100%; height: 480px; border-radius: 8px;">
-            </iframe>
-          </div>
-        </div>
-      </article>
-
-      <!-- Publicación 2: Afiche / Banner -->
-      <article class="tarjeta-post">
-        <div class="post-header">
-          <span class="post-icono">🏊‍♂️</span>
-          <div>
-            <h3>Próxima Competencia Confirmada</h3>
-            <span class="post-fecha">Arequipa, Perú</span>
-          </div>
-        </div>
-        <div class="post-body">
-          <p>¡Todo listo para la siguiente jornada de natación competitiva!</p>
-          <img src="logo.png" alt="Afiche del Torneo" class="img-post">
-        </div>
-      </article>
+      <!-- Contenedor dinámico donde se cargarán las publicaciones de Supabase -->
+      <div id="muro-posts-dinamicos" class="columna-centro">
+        <p>Cargando novedades...</p>
+      </div>
     </main>
 
     <!-- COLUMNA DERECHA: Widgets de Accesos Rápidos y Tiempo Real -->
@@ -157,12 +132,200 @@
 
   </div>
 
+  <!-- Botón Flotante para Abrir Panel Admin -->
+  <button id="btn-admin-flotante" onclick="abrirAdmin()">🔐 Panel Admin</button>
+
+  <!-- Modal / Ventana de Administración -->
+  <div id="modal-admin">
+    <div class="modal-contenido">
+      <span class="cerrar-modal" onclick="cerrarAdmin()">&times;</span>
+      <h3 style="color: #005f73; margin-bottom: 15px;">Administración del Portal</h3>
+
+      <!-- Validar Contraseña -->
+      <div id="login-admin">
+        <label style="font-size: 0.9rem; font-weight: bold;">Contraseña de administración:</label>
+        <input type="password" id="clave-admin" placeholder="Ingresa la clave" style="width: 100%; padding: 8px; margin: 10px 0;">
+        <button onclick="validarClave()" class="btn-primario">Ingresar</button>
+      </div>
+
+      <!-- Formulario de Carga Directa -->
+      <div id="panel-carga" style="display:none;">
+        <hr style="margin: 15px 0;">
+        <h4 style="color: #003845;">1. Publicar en Muro Central</h4>
+        <input type="text" id="post-titulo" placeholder="Título de la publicación" class="input-admin">
+        <select id="post-tipo" onchange="cambiarTipoMedia()" class="input-admin">
+          <option value="imagen">Imagen / Afiche (Archivo)</option>
+          <option value="tiktok">Video TikTok (Enlace)</option>
+        </select>
+        
+        <input type="file" id="post-archivo" accept="image/*" class="input-admin">
+        <input type="text" id="post-url-tiktok" placeholder="URL del video de TikTok" style="display:none;" class="input-admin">
+        
+        <button onclick="subirPublicacion()" class="btn-primario">Publicar en Muro</button>
+
+        <hr style="margin: 15px 0;">
+        <h4 style="color: #003845;">2. Subir PDF de Resultados Anteriores</h4>
+        <input type="text" id="pdf-nombre" placeholder="Nombre de la competencia" class="input-admin">
+        <input type="file" id="pdf-archivo" accept="application/pdf" class="input-admin">
+        <button onclick="subirPDF()" class="btn-primario">Subir Resultados PDF</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Pie de página institucional -->
   <footer>
     <p>Cuerpo de jueces de natación competitiva, Arequipa, Perú, afiliados a la Federación Deportiva Nacional de Deportes Acuáticos</p>
   </footer>
 
   <script>
+    // Inicialización con las claves de tu proyecto en Supabase
+    const SUPABASE_URL = "https://uzzelqylxzggnjdevrcu.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_FIisK0H2q8fNaJNtlByeA_IU4nY..."; // Tu clave Publishable
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const CLAVE_CORRECTA = "Arequipa2026*"; // Puedes cambiar esta contraseña
+
+    function abrirAdmin() { document.getElementById('modal-admin').style.display = 'flex'; }
+    function cerrarAdmin() { document.getElementById('modal-admin').style.display = 'none'; }
+
+    function validarClave() {
+      const clave = document.getElementById('clave-admin').value;
+      if (clave === CLAVE_CORRECTA) {
+        document.getElementById('login-admin').style.display = 'none';
+        document.getElementById('panel-carga').style.display = 'block';
+      } else {
+        alert("Contraseña incorrecta.");
+      }
+    }
+
+    function cambiarTipoMedia() {
+      const tipo = document.getElementById('post-tipo').value;
+      if (tipo === 'tiktok') {
+        document.getElementById('post-archivo').style.display = 'none';
+        document.getElementById('post-url-tiktok').style.display = 'block';
+      } else {
+        document.getElementById('post-archivo').style.display = 'block';
+        document.getElementById('post-url-tiktok').style.display = 'none';
+      }
+    }
+
+    // Subir publicación al Muro Central
+    async function subirPublicacion() {
+      const titulo = document.getElementById('post-titulo').value;
+      const tipo = document.getElementById('post-tipo').value;
+      let urlMedia = '';
+
+      if (!titulo) return alert("Escribe un título.");
+
+      if (tipo === 'imagen') {
+        const file = document.getElementById('post-archivo').files[0];
+        if (!file) return alert("Selecciona una imagen.");
+        
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const { data, error } = await supabaseClient.storage.from('novedades').upload(fileName, file);
+        
+        if (error) return alert("Error al subir archivo: " + error.message);
+        urlMedia = `${SUPABASE_URL}/storage/v1/object/public/novedades/${fileName}`;
+      } else {
+        urlMedia = document.getElementById('post-url-tiktok').value;
+      }
+
+      const { error: dbError } = await supabaseClient.from('publicaciones').insert([
+        { titulo, tipo, url_media: urlMedia }
+      ]);
+
+      if (dbError) alert("Error guardando publicación: " + dbError.message);
+      else { alert("¡Publicación realizada con éxito!"); location.reload(); }
+    }
+
+    // Subir PDF de Resultados
+    async function subirPDF() {
+      const nombre = document.getElementById('pdf-nombre').value;
+      const file = document.getElementById('pdf-archivo').files[0];
+
+      if (!nombre || !file) return alert("Completa el nombre y selecciona el archivo PDF.");
+
+      const fileName = `${Date.now()}_${file.name}`;
+      const { data, error } = await supabaseClient.storage.from('resultados-pdf').upload(fileName, file);
+
+      if (error) return alert("Error al subir PDF: " + error.message);
+
+      const urlPdf = `${SUPABASE_URL}/storage/v1/object/public/resultados-pdf/${fileName}`;
+
+      const { error: dbError } = await supabaseClient.from('resultados_pdf').insert([
+        { nombre_torneo: nombre, url_pdf: urlPdf }
+      ]);
+
+      if (dbError) alert("Error guardando registro: " + dbError.message);
+      else { alert("¡PDF subido exitosamente!"); location.reload(); }
+    }
+
+    // Cargar novedades en el Muro desde Supabase
+    async function cargarPublicaciones() {
+      const { data: posts, error } = await supabaseClient
+        .from('publicaciones')
+        .select('*')
+        .order('fecha_creacion', { ascending: false });
+
+      const contenedor = document.getElementById('muro-posts-dinamicos');
+      if (error || !posts || posts.length === 0) {
+        contenedor.innerHTML = '<p>No hay publicaciones recientes.</p>';
+        return;
+      }
+
+      contenedor.innerHTML = posts.map(post => {
+        let contenidoMedia = '';
+        if (post.tipo === 'imagen') {
+          contenidoMedia = `<img src="${post.url_media}" alt="${post.titulo}" class="img-post">`;
+        } else if (post.tipo === 'tiktok') {
+          contenidoMedia = `<iframe src="${post.url_media}" allow="fullscreen" frameborder="0" style="width: 100%; height: 480px; border-radius: 8px;"></iframe>`;
+        }
+
+        return `
+          <article class="tarjeta-post">
+            <div class="post-header">
+              <span class="post-icono">🏊‍♂️</span>
+              <div>
+                <h3>${post.titulo}</h3>
+                <span class="post-fecha">${new Date(post.fecha_creacion).toLocaleDateString()}</span>
+              </div>
+            </div>
+            <div class="post-body">
+              ${contenidoMedia}
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // Cargar PDFs de resultados anteriores desde Supabase
+    async function cargarResultadosPDF() {
+      const { data: pdfs, error } = await supabaseClient
+        .from('resultados_pdf')
+        .select('*')
+        .order('fecha_creacion', { ascending: false });
+
+      const lista = document.getElementById('lista-pdf-resultados');
+      if (error || !pdfs || pdfs.length === 0) {
+        lista.innerHTML = '<li>No hay resultados registrados.</li>';
+        return;
+      }
+
+      lista.innerHTML = pdfs.map(pdf => `
+        <li style="margin-bottom: 8px;">
+          📄 <a href="${pdf.url_pdf}" target="_blank" style="color: #0077b6; font-weight: bold; text-decoration: none;">${pdf.nombre_torneo}</a>
+        </li>
+      `).join('');
+    }
+
+    // Cargar datos al iniciar la página
+    window.addEventListener('DOMContentLoaded', () => {
+      cargarPublicaciones();
+      cargarResultadosPDF();
+    });
+
+    // Envío del formulario de WhatsApp
     document.getElementById('form-whatsapp').addEventListener('submit', function(e) {
       e.preventDefault();
       const numeroTelefono = "51959316166"; 
