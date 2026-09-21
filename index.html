@@ -180,21 +180,21 @@
   <script>
     // Inicialización con las claves de tu proyecto en Supabase
     const SUPABASE_URL = "https://uzzelqylxzggnjdevrcu.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_FIisK0H2qX8fNaJNtLByeA_IU4nYT6-"; // Tu clave Publishable
+    const SUPABASE_KEY = "PEGA_AQUI_TU_PUBLISHABLE_KEY_COMPLETA"; // ⚠️ Recuerda pegar tu clave completa de Supabase
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const CLAVE_CORRECTA = "Arequipa2026*"; // Puedes cambiar esta contraseña
+    const CLAVE_CORRECTA = "Arequipa2026*"; 
 
     function abrirAdmin() { document.getElementById('modal-admin').style.display = 'flex'; }
     function cerrarAdmin() { document.getElementById('modal-admin').style.display = 'none'; }
 
     function validarClave() {
-      const clave = document.getElementById('clave-admin').value;
-      if (clave === CLAVE_CORRECTA) {
+      const inputClave = document.getElementById('clave-admin').value.trim();
+      if (inputClave === CLAVE_CORRECTA) {
         document.getElementById('login-admin').style.display = 'none';
         document.getElementById('panel-carga').style.display = 'block';
       } else {
-        alert("Contraseña incorrecta.");
+        alert("Contraseña incorrecta. Intenta nuevamente.");
       }
     }
 
@@ -209,20 +209,32 @@
       }
     }
 
+    // Función para sanitizar el nombre de archivos eliminando tildes, espacios y caracteres especiales
+    function limpiarNombreArchivo(nombreOriginal) {
+      return nombreOriginal
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/ñ/g, "n")
+        .replace(/Ñ/g, "N")
+        .replace(/[^a-zA-Z0-9.-]/g, "_");
+    }
+
     // Subir publicación al Muro Central
     async function subirPublicacion() {
       const titulo = document.getElementById('post-titulo').value;
       const tipo = document.getElementById('post-tipo').value;
       let urlMedia = '';
 
-      if (!titulo) return alert("Escribe un título.");
+      if (!titulo) return alert("Escribe un título para la publicación.");
 
       if (tipo === 'imagen') {
         const file = document.getElementById('post-archivo').files[0];
         if (!file) return alert("Selecciona una imagen.");
         
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
+        const nombreLimpio = limpiarNombreArchivo(file.name.replace('.' + fileExt, ''));
+        const fileName = `${Date.now()}_${nombreLimpio}.${fileExt}`;
+
         const { data, error } = await supabaseClient.storage.from('novedades').upload(fileName, file);
         
         if (error) return alert("Error al subir archivo: " + error.message);
@@ -246,7 +258,10 @@
 
       if (!nombre || !file) return alert("Completa el nombre y selecciona el archivo PDF.");
 
-      const fileName = `${Date.now()}_${file.name}`;
+      const fileExt = file.name.split('.').pop();
+      const nombreLimpio = limpiarNombreArchivo(file.name.replace('.' + fileExt, ''));
+      const fileName = `${Date.now()}_${nombreLimpio}.${fileExt}`;
+
       const { data, error } = await supabaseClient.storage.from('resultados-pdf').upload(fileName, file);
 
       if (error) return alert("Error al subir PDF: " + error.message);
