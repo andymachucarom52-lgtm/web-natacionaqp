@@ -104,7 +104,7 @@ body {
 /* 3. ESTRUCTURA GRID DE 3 COLUMNAS */
 .layout-tres-columnas {
   display: grid;
-  grid-template-columns: 280px 1fr 280px; /* Columna Izq | Centro | Derecha */
+  grid-template-columns: 280px 1fr 280px;
   gap: 20px;
   max-width: 1300px;
   margin: 25px auto;
@@ -119,7 +119,7 @@ body {
   border-bottom: 2px solid #b2e2e2;
 }
 
-/* --- COLUMNA IZQUIERDA (Acordeones) --- */
+/* --- COLUMNA IZQUIERDA --- */
 .columna-izquierda {
   display: flex;
   flex-direction: column;
@@ -166,7 +166,13 @@ body {
   font-size: 0.88rem;
 }
 
-/* Formulario WhatsApp en la columna lateral */
+.lista-resultados {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+/* Formulario WhatsApp */
 #form-whatsapp {
   display: flex;
   flex-direction: column;
@@ -194,7 +200,7 @@ body {
   cursor: pointer;
 }
 
-/* --- COLUMNA CENTRAL (Muro de Publicaciones) --- */
+/* --- COLUMNA CENTRAL --- */
 .columna-centro {
   display: flex;
   flex-direction: column;
@@ -256,7 +262,7 @@ body {
   background-color: #f8fcfd;
 }
 
-/* --- COLUMNA DERECHA (Widgets) --- */
+/* --- COLUMNA DERECHA --- */
 .columna-derecha {
   display: flex;
   flex-direction: column;
@@ -293,7 +299,78 @@ body {
   background-color: #005f73;
 }
 
-/* 4. Pie de Página Institucional */
+/* --- PANEL ADMIN Y MODAL --- */
+#btn-admin-flotante {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #003845;
+  color: #fff;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  font-weight: bold;
+  z-index: 2000;
+}
+
+#btn-admin-flotante:hover {
+  background-color: #00a896;
+}
+
+#modal-admin {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 2001;
+}
+
+.modal-contenido {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 450px;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.cerrar-modal {
+  position: absolute;
+  top: 10px; right: 15px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #777;
+}
+
+.input-admin {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn-primario {
+  background-color: #00a896;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-primario:hover {
+  background-color: #005f73;
+}
+
+/* Pie de Página */
 footer {
   background-color: var(--color-nav-fondo);
   color: #ffffff;
@@ -303,10 +380,10 @@ footer {
   font-size: 0.9rem;
 }
 
-/* Adaptación para pantallas pequeñas / Celulares */
+/* Adaptación a dispositivos móviles */
 @media (max-width: 1024px) {
   .layout-tres-columnas {
-    grid-template-columns: 1fr; /* Pasa a 1 columna apilada en celulares */
+    grid-template-columns: 1fr;
   }
 
   .linea-piscina {
