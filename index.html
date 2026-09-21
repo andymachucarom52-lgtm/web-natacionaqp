@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Natación Arequipa - Portal Oficial</title>
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Great+Vibes&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
@@ -22,7 +23,7 @@
     </ul>
   </nav>
 
-  <!-- Encabezado con Línea Azul / Agua de Piscina -->
+  <!-- Encabezado con Franja Horizontal Azul Agua de Piscina -->
   <header class="encabezado-piscina">
     <div class="linea-piscina">
       <img src="logo.png" alt="Logo Natación Arequipa" class="logo-izq">
@@ -30,104 +31,131 @@
     </div>
   </header>
 
-  <main>
-    <!-- Recuadro compacto flotante a la derecha para AquaSplashMobile -->
-    <div class="contenedor-flotante-derecha">
+  <!-- ESTRUCTURA PRINCIPAL DE 3 COLUMNAS -->
+  <div class="layout-tres-columnas">
+
+    <!-- COLUMNA IZQUIERDA: Accesos Directos a Secciones (Acordeones) -->
+    <aside class="columna-izquierda">
+      <h2 class="titulo-columna">📌 Menú de Secciones</h2>
+
+      <details class="acordeon-seccion" id="calendario">
+        <summary class="acordeon-titulo">📅 Calendario</summary>
+        <div class="acordeon-contenido">
+          <p>Fechas y horarios oficiales:</p>
+          <div class="contenedor-iframe">
+            <iframe src="https://calendar.google.com/calendar/embed?src=bf831fe589c0ef4c5f3ff045b8973fb280dd17f4b7a1ee1b4e6f77cf6c166f17%40group.calendar.google.com&ctz=America%2FLima&mode=AGENDA" 
+                    style="border: 0;" width="100%" height="450" frameborder="0" scrolling="no">
+            </iframe>
+          </div>
+        </div>
+      </details>
+
+      <details class="acordeon-seccion" id="inscripciones">
+        <summary class="acordeon-titulo">📝 Inscripciones</summary>
+        <div class="acordeon-contenido">
+          <p>Próximamente habilitaremos el módulo de inscripciones en línea.</p>
+        </div>
+      </details>
+
+      <details class="acordeon-seccion" id="resultados-anteriores">
+        <summary class="acordeon-titulo">🏆 Resultados Anteriores</summary>
+        <div class="acordeon-contenido">
+          <p>Histórico de tiempos y planillas oficiales de torneos pasados.</p>
+        </div>
+      </details>
+
+      <details class="acordeon-seccion" id="contacto">
+        <summary class="acordeon-titulo">💬 Contáctanos</summary>
+        <div class="acordeon-contenido">
+          <form id="form-whatsapp">
+            <label for="nombre">Nombre / Club:</label>
+            <input type="text" id="nombre" required placeholder="Ej. Club Acuático">
+
+            <label for="asunto">Asunto:</label>
+            <select id="asunto" required>
+              <option value="Inscripciones">Inscripciones</option>
+              <option value="Resultados / Tiempos">Resultados / Tiempos</option>
+              <option value="Certificados / Acreditaciones">Certificados / Acreditaciones</option>
+              <option value="Consulta General">Consulta General</option>
+            </select>
+
+            <label for="mensaje">Mensaje:</label>
+            <textarea id="mensaje" rows="3" required placeholder="Consulta..."></textarea>
+
+            <button type="submit" class="btn-whatsapp">💬 Enviar a WhatsApp</button>
+          </form>
+        </div>
+      </details>
+    </aside>
+
+    <!-- COLUMNA CENTRAL: Muro de Publicaciones y Videos (Estilo Feed de Facebook) -->
+    <main class="columna-centro">
+      <div class="muro-publicacion">
+        <h2>📣 Novedades y Destacados</h2>
+        <p>Revive las mejores pruebas y entérate de los próximos eventos:</p>
+      </div>
+
+      <!-- Publicación 1: Video de TikTok -->
+      <article class="tarjeta-post">
+        <div class="post-header">
+          <span class="post-icono">🎬</span>
+          <div>
+            <h3>Video Destacado</h3>
+            <span class="post-fecha">Publicado recientemente</span>
+          </div>
+        </div>
+        <div class="post-body">
+          <p>Revive los mejores momentos de las últimas competencias oficiales:</p>
+          <div class="contenedor-tiktok">
+            <!-- ⚠️ Reemplaza este iframe por el código Embed de tu video de TikTok -->
+            <iframe src="https://www.tiktok.com/player/v1/7123456789012345678" 
+                    allow="fullscreen" 
+                    frameborder="0" 
+                    style="width: 100%; height: 480px; border-radius: 8px;">
+            </iframe>
+          </div>
+        </div>
+      </article>
+
+      <!-- Publicación 2: Afiche / Banner -->
+      <article class="tarjeta-post">
+        <div class="post-header">
+          <span class="post-icono">🏊‍♂️</span>
+          <div>
+            <h3>Próxima Competencia Confirmada</h3>
+            <span class="post-fecha">Arequipa, Perú</span>
+          </div>
+        </div>
+        <div class="post-body">
+          <p>¡Todo listo para la siguiente jornada de natación competitiva!</p>
+          <img src="logo.png" alt="Afiche del Torneo" class="img-post">
+        </div>
+      </article>
+    </main>
+
+    <!-- COLUMNA DERECHA: Widgets de Accesos Rápidos y Tiempo Real -->
+    <aside class="columna-derecha">
+      <h2 class="titulo-columna">⚡ Accesos Rápidos</h2>
+
+      <!-- Widget AquaSplashMobile -->
       <div id="vivo" class="tarjeta-derecha">
-        <h2>Competencias en tiempo real</h2>
+        <h3>Competencias en tiempo real</h3>
+        <p style="font-size: 0.85rem; color: #555; margin-bottom: 10px;">Sigue las marcas en vivo desde la app oficial:</p>
         <a href="https://aquasplashmovile.netlify.app" target="_blank" rel="noopener noreferrer" class="btn-aquasplash">
           ⏱️ AquaSplashMobile
         </a>
       </div>
-    </div>
 
-    <!-- SECCIÓN CENTRAL: Muro de Publicaciones y Videos (TikTok / Novedades) -->
-    <section class="contenedor-seccion muro-destacado">
-      <h2>📣 Últimas Novedades y Destacados</h2>
-      <p>Revive momentos de competencias pasadas o entérate de los próximos torneos:</p>
-      
-      <div class="muro-grid">
-        <!-- Ejemplo de Incrustado de TikTok -->
-        <div class="tarjeta-media">
-          <h3>Video Destacado TikTok</h3>
-          <div class="contenedor-tiktok">
-            <!-- ⚠️ Reemplaza la URL del src por el enlace embed de tu video de TikTok -->
-            <iframe src="https://www.tiktok.com/player/v1/7123456789012345678" 
-                    allow="fullscreen" 
-                    frameborder="0" 
-                    style="width: 100%; height: 500px; border-radius: 8px;">
-            </iframe>
-          </div>
-        </div>
-
-        <!-- Ejemplo de Banner/Imagen de Próximo Evento -->
-        <div class="tarjeta-media">
-          <h3>Próximo Evento Oficial</h3>
-          <img src="logo.png" alt="Afiche del Torneo" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px;">
-          <p style="margin-top: 10px; text-align: center; font-weight: bold;">¡Nos preparamos para el Campeonato Regional 2026!</p>
-        </div>
+      <!-- Widget Informativo Adicional -->
+      <div class="tarjeta-derecha" style="margin-top: 15px;">
+        <h3>Aviso Institucional</h3>
+        <p style="font-size: 0.85rem; color: #444;">
+          Para consultas sobre jueceo y acreditaciones oficiales, utiliza nuestro módulo directo de WhatsApp.
+        </p>
       </div>
-    </section>
+    </aside>
 
-    <!-- SECCIONES DESPLEGABLES (ACORDEÓN) -->
-    
-    <!-- DESPLEGABLE 1: Calendario -->
-    <details class="acordeon-seccion" id="calendario">
-      <summary class="acordeon-titulo">📅 Calendario de Competencias Confirmadas</summary>
-      <div class="acordeon-contenido">
-        <p>Consulta las fechas, sedes y horarios de los próximos eventos:</p>
-        <div class="contenedor-iframe">
-          <iframe src="https://calendar.google.com/calendar/embed?src=bf831fe589c0ef4c5f3ff045b8973fb280dd17f4b7a1ee1b4e6f77cf6c166f17%40group.calendar.google.com&ctz=America%2FLima&mode=AGENDA" 
-                  style="border: 0;" width="100%" height="600" frameborder="0" scrolling="no">
-          </iframe>
-        </div>
-      </div>
-    </details>
-
-    <!-- DESPLEGABLE 2: Inscripciones en Vivo -->
-    <details class="acordeon-seccion" id="inscripciones">
-      <summary class="acordeon-titulo">📝 Inscripciones en Vivo</summary>
-      <div class="acordeon-contenido">
-        <p>Próximamente habilitaremos el módulo de inscripciones en línea para clubes y deportistas.</p>
-      </div>
-    </details>
-
-    <!-- DESPLEGABLE 3: Resultados Anteriores -->
-    <details class="acordeon-seccion" id="resultados-anteriores">
-      <summary class="acordeon-titulo">🏆 Resultados de Competencias Anteriores</summary>
-      <div class="acordeon-contenido">
-        <p>Histórico de tiempos y planillas oficiales de torneos pasados.</p>
-      </div>
-    </details>
-
-    <!-- DESPLEGABLE 4: Contáctanos (WhatsApp) -->
-    <details class="acordeon-seccion" id="contacto">
-      <summary class="acordeon-titulo">💬 Contáctanos vía WhatsApp</summary>
-      <div class="acordeon-contenido">
-        <p>Llena tus datos para iniciar una conversación directa con la organización:</p>
-        <form id="form-whatsapp">
-          <label for="nombre">Nombre completo / Club:</label>
-          <input type="text" id="nombre" required placeholder="Ej. Juan Pérez - Club Acuático">
-
-          <label for="asunto">Asunto o Tipo de Consulta:</label>
-          <select id="asunto" required>
-            <option value="Inscripciones">Inscripciones</option>
-            <option value="Resultados / Tiempos">Resultados / Tiempos</option>
-            <option value="Certificados / Acreditaciones">Certificados / Acreditaciones</option>
-            <option value="Consulta General">Consulta General</option>
-          </select>
-
-          <label for="mensaje">Mensaje:</label>
-          <textarea id="mensaje" rows="4" required placeholder="Escribe tu consulta detallada aquí..."></textarea>
-
-          <button type="submit" class="btn-whatsapp">
-            💬 Enviar a WhatsApp
-          </button>
-        </form>
-      </div>
-    </details>
-
-  </main>
+  </div>
 
   <!-- Pie de página institucional -->
   <footer>
