@@ -137,7 +137,7 @@
 
   <!-- Modal / Ventana de Administración -->
   <div id="modal-admin">
-    <div class="modal-contenido">
+    <div class="modal-contenido" style="max-height: 85vh; overflow-y: auto;">
       <span class="cerrar-modal" onclick="cerrarAdmin()">&times;</span>
       <h3 style="color: #005f73; margin-bottom: 15px;">Administración del Portal</h3>
 
@@ -148,7 +148,7 @@
         <button onclick="validarClave()" class="btn-primario">Ingresar</button>
       </div>
 
-      <!-- Formulario de Carga Directa -->
+      <!-- Formulario de Carga y Gestión -->
       <div id="panel-carga" style="display:none;">
         <hr style="margin: 15px 0;">
         <h4 style="color: #003845;">1. Publicar en Muro Central</h4>
@@ -168,6 +168,12 @@
         <input type="text" id="pdf-nombre" placeholder="Nombre de la competencia" class="input-admin">
         <input type="file" id="pdf-archivo" accept="application/pdf" class="input-admin">
         <button onclick="subirPDF()" class="btn-primario">Subir Resultados PDF</button>
+
+        <hr style="margin: 15px 0;">
+        <h4 style="color: #003845;">3. Administrar / Eliminar Publicaciones</h4>
+        <div id="lista-admin-publicaciones">
+          <p style="font-size: 0.85rem; color: #666;">Cargando lista de publicaciones...</p>
+        </div>
       </div>
     </div>
   </div>
@@ -178,7 +184,7 @@
   </footer>
 
   <script>
-    // Configuración de conexión a Supabase con tu Publishable Key agregada
+    // Configuración de conexión a Supabase
     const SUPABASE_URL = "https://uzzelqylxzggnjdevrcu.supabase.co";
     const SUPABASE_KEY = "sb_publishable_FIisK0H2qX8fNaJNtLByeA_IU4nYT6-";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -193,6 +199,7 @@
       if (inputClave === CLAVE_CORRECTA) {
         document.getElementById('login-admin').style.display = 'none';
         document.getElementById('panel-carga').style.display = 'block';
+        cargarGestionPublicaciones();
       } else {
         alert("Contraseña incorrecta. Intenta nuevamente.");
       }
@@ -209,7 +216,6 @@
       }
     }
 
-    // Función para sanitizar el nombre de archivos eliminando tildes, espacios y caracteres especiales
     function limpiarNombreArchivo(nombreOriginal) {
       return nombreOriginal
         .normalize("NFD")
@@ -219,7 +225,6 @@
         .replace(/[^a-zA-Z0-9.-]/g, "_");
     }
 
-    // Función para transformar URL estándar de TikTok a su formato 'embed' incrustable
     function obtenerUrlEmbedTikTok(urlOriginal) {
       if (!urlOriginal.includes('tiktok.com')) return urlOriginal;
       const match = urlOriginal.match(/\/video\/(\d+)/);
@@ -288,7 +293,7 @@
       else { alert("¡PDF subido exitosamente!"); location.reload(); }
     }
 
-    // Cargar novedades en el Muro desde Supabase
+    // Cargar publicaciones en el Muro
     async function cargarPublicaciones() {
       const { data: posts, error } = await supabaseClient
         .from('publicaciones')
@@ -327,7 +332,49 @@
       }).join('');
     }
 
-    // Cargar PDFs de resultados anteriores desde Supabase
+    // Cargar lista de gestión en el Panel Admin
+    async function cargarGestionPublicaciones() {
+      const { data: posts, error } = await supabaseClient
+        .from('publicaciones')
+        .select('*')
+        .order('fecha_creacion', { ascending: false });
+
+      const contenedor = document.getElementById('lista-admin-publicaciones');
+      if (error || !posts || posts.length === 0) {
+        contenedor.innerHTML = '<p style="font-size: 0.85rem; color: #666;">No hay publicaciones para eliminar.</p>';
+        return;
+      }
+
+      contenedor.innerHTML = posts.map(post => `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f0f4f8; padding: 8px 12px; margin-bottom: 8px; border-radius: 6px;">
+          <span style="font-size: 0.85rem; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px;">
+            ${post.titulo} (${post.tipo})
+          </span>
+          <button onclick="eliminarPublicacion(${post.id})" style="background: #e63946; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
+            🗑️ Eliminar
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Eliminar una publicación por ID
+    async function eliminarPublicacion(id) {
+      if (!confirm("¿Estás seguro de que deseas eliminar esta publicación?")) return;
+
+      const { error } = await supabaseClient
+        .from('publicaciones')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert("Error al eliminar la publicación: " + error.message);
+      } else {
+        alert("Publicación eliminada correctamente.");
+        location.reload();
+      }
+    }
+
+    // Cargar PDFs de resultados anteriores
     async function cargarResultadosPDF() {
       const { data: pdfs, error } = await supabaseClient
         .from('resultados_pdf')
@@ -347,13 +394,13 @@
       `).join('');
     }
 
-    // Cargar datos al iniciar la página
+    // Cargar datos al iniciar
     window.addEventListener('DOMContentLoaded', () => {
       cargarPublicaciones();
       cargarResultadosPDF();
     });
 
-    // Envío del formulario de WhatsApp
+    // Envío de WhatsApp
     document.getElementById('form-whatsapp').addEventListener('submit', function(e) {
       e.preventDefault();
       const numeroTelefono = "51959316166"; 
