@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta name="google-site-verification" content="VVw12NVH5SkcY9_BkAYO9ttZJcG6TdMD6ALF_alNV-M" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <!-- Etiquetas SEO para posicionamiento en buscadores (Google, Bing, etc.) -->
   <title>Natación Arequipa - Portal Oficial de Competencias y Resultados</title>
   <meta name="description" content="Portal oficial de Natación Arequipa. Consulta resultados de torneos en PDF, calendario de competencias, inscripciones en vivo y novedades del circuito acuático.">
-  <meta name="keywords" content="Natación Arequipa, competencias de natación, resultados natación Arequipa, jueceo natación Perú, calendario acuático">
+  <meta name="keywords" content="Natación Arequipa, competencias de natación, resultados natación Arequipa, jueceo natación Perú, calendario acuático, reglamento World Aquatics">
   <meta name="robots" content="index, follow">
 
   <!-- Google Fonts -->
@@ -37,7 +36,6 @@
   <header class="encabezado-piscina">
     <div class="linea-piscina">
       <img src="logo.png" alt="Logo Natación Arequipa" class="logo-izq">
-      <!-- Tamaño de letra aumentado para el título manteniendo proporciones de franja y logo -->
       <h1 class="titulo-3d" style="font-size: 2.8rem; line-height: 1;">Natación Arequipa</h1>
     </div>
   </header>
@@ -126,6 +124,30 @@
         <p style="font-size: 0.85rem; color: #555; margin-bottom: 10px;">Sigue las marcas en vivo desde la app oficial:</p>
         <a href="https://aquasplashmovile.netlify.app" target="_blank" rel="noopener noreferrer" class="btn-aquasplash">
           ⏱️ AquaSplashMobile
+        </a>
+      </div>
+
+      <!-- WIDGET: Visor del Reglamento World Aquatics en Español -->
+      <div class="tarjeta-derecha" style="margin-top: 15px;">
+        <h3>📖 Reglamento World Aquatics</h3>
+        <p style="font-size: 0.85rem; color: #555; margin-bottom: 8px;">Reglamento oficial traducido al español:</p>
+
+        <!-- Visor PDF embebido desde tu bucket REGLAMENTO -->
+        <iframe 
+          id="visor-reglamento-pdf"
+          src="https://uzzelqylxzggnjdevrcu.supabase.co/storage/v1/object/public/REGLAMENTO/2026-02-18_World-Aquatics_Reglamento+traducido+SA.pdf#toolbar=0" 
+          width="100%" 
+          height="320" 
+          style="border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;"
+          title="Reglamento World Aquatics en Español">
+        </iframe>
+
+        <a id="btn-descargar-reglamento" 
+           href="https://uzzelqylxzggnjdevrcu.supabase.co/storage/v1/object/public/REGLAMENTO/2026-02-18_World-Aquatics_Reglamento+traducido+SA.pdf" 
+           target="_blank" 
+           rel="noopener noreferrer" 
+           style="display: block; text-align: center; background: #0077b6; color: white; padding: 8px 10px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: bold;">
+          📄 Abrir PDF a pantalla completa
         </a>
       </div>
 
