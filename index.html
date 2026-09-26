@@ -248,21 +248,29 @@
         <input type="datetime-local" id="torneo-cierre" class="input-admin">
         
         <label style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; display: block;">Archivo de Pruebas (.HYV / .TXT) de Meet Manager:</label>
-        <input type="file" id="archivo-hyv-input" accept=".hyv,.txt,.zip" class="input-admin">
+        <input type="file" id="archivo-hyv-input" accept=".hyv,.txt,.zip" class="input-admin" required>
         
         <button onclick="crearNuevoTorneo()" class="btn-primario">Crear Torneo y Cargar Pruebas</button>
 
         <hr style="margin: 15px 0;">
-        <h4 style="color: #003845;">2. Agregar Pruebas Manualmente (Opcional)</h4>
-        <input type="number" id="prueba-num" placeholder="N° Prueba (Ej. 1)" class="input-admin">
-        <input type="text" id="prueba-estilo" placeholder="Prueba (Ej. 50m Libre)" class="input-admin">
-        <input type="text" id="prueba-cat" placeholder="Categoría (Ej. Infantil B)" class="input-admin">
-        <select id="prueba-genero" class="input-admin">
-          <option value="M">Varones</option>
-          <option value="F">Damas</option>
-          <option value="X">Mixto</option>
+        <h4 style="color: #003845;">2. Editar / Actualizar Torneo Existente</h4>
+        <label style="font-size: 0.8rem; font-weight: bold;">Selecciona Torneo a Editar:</label>
+        <select id="select-torneo-editar" class="input-admin" onchange="cargarDatosTorneoParaEditar()" style="width: 100%; margin-bottom: 8px;">
+          <option value="">-- Selecciona un torneo --</option>
         </select>
-        <button onclick="agregarPruebaTorneo()" class="btn-primario">Agregar Prueba Manual</button>
+
+        <div id="bloque-edicion-torneo" style="display: none; background: #f0fdf4; padding: 10px; border: 1px solid #86efac; border-radius: 6px;">
+          <input type="text" id="edit-torneo-nombre" placeholder="Nombre del Torneo" class="input-admin">
+          <label style="font-size: 0.8rem;">Fecha del Torneo:</label>
+          <input type="date" id="edit-torneo-fecha" class="input-admin">
+          <label style="font-size: 0.8rem;">Cierre de Inscripciones:</label>
+          <input type="datetime-local" id="edit-torneo-cierre" class="input-admin">
+
+          <label style="font-size: 0.8rem; font-weight: bold; margin-top: 8px; display: block; color: #15803d;">Actualizar / Reemplazar Pruebas (.HYV / .TXT):</label>
+          <input type="file" id="edit-archivo-hyv-input" accept=".hyv,.txt,.zip" class="input-admin">
+
+          <button onclick="guardarCambiosTorneo()" class="btn-primario" style="background: #16a34a; margin-top: 8px;">💾 Guardar Cambios de Torneo y Pruebas</button>
+        </div>
 
         <hr style="margin: 15px 0;">
         <h4 style="color: #003845;">3. Publicar en Muro Central</h4>
@@ -308,6 +316,7 @@
     const CLAVE_CORRECTA = "Arequipa2026*"; 
     let torneoActivoObj = null;
     let clubSeleccionadoId = null;
+    let listaTorneosGlobal = [];
 
     function abrirAdmin() { document.getElementById('modal-admin').style.display = 'flex'; }
     function cerrarAdmin() { document.getElementById('modal-admin').style.display = 'none'; }
@@ -318,6 +327,7 @@
         document.getElementById('login-admin').style.display = 'none';
         document.getElementById('panel-carga').style.display = 'block';
         cargarGestionPublicaciones();
+        cargarListaTorneosParaEditar();
       } else {
         alert("Contraseña incorrecta.");
       }
@@ -341,44 +351,50 @@
 
     // --- LÓGICA DE INSCRIPCIONES Y PROCESAMIENTO HY-TEK --- //
 
-    async function procesarArchivoPruebasMeetManager(file, torneoId) {
-      const reader = new FileReader();
-      
-      reader.onload = async function(e) {
-        const contenido = e.target.result;
-        const lineas = contenido.split('\n');
-        let pruebasParaInsertar = [];
+    async function procesarArchivoPruebasMeetManager(file, torneoId, reemplazar = false) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = async function(e) {
+          const contenido = e.target.result;
+          const lineas = contenido.split('\n');
+          let pruebasParaInsertar = [];
 
-        lineas.forEach(linea => {
-          if (linea.startsWith('D1') || linea.startsWith('E1') || linea.includes('Mtr') || linea.includes('Free') || linea.includes('Libre')) {
-            const numPrueba = linea.substring(2, 6).trim() || Math.floor(Math.random() * 100);
-            const genero = linea.includes('F') ? 'F' : (linea.includes('M') ? 'M' : 'X');
-            const estilo = linea.substring(10, 40).trim() || "Prueba Oficial";
-            const cat = "Open / Oficial";
+          lineas.forEach(linea => {
+            if (linea.startsWith('D1') || linea.startsWith('E1') || linea.includes('Mtr') || linea.includes('Free') || linea.includes('Libre')) {
+              const numPrueba = linea.substring(2, 6).trim() || Math.floor(Math.random() * 100);
+              const genero = linea.includes('F') ? 'F' : (linea.includes('M') ? 'M' : 'X');
+              const estilo = linea.substring(10, 40).trim() || "Prueba Oficial";
+              const cat = "Open / Oficial";
 
-            if (numPrueba && estilo) {
-              pruebasParaInsertar.push({
-                torneo_id: torneoId,
-                numero_prueba: parseInt(numPrueba) || 1,
-                estilo: estilo,
-                categoria: cat,
-                genero: genero
-              });
+              if (numPrueba && estilo) {
+                pruebasParaInsertar.push({
+                  torneo_id: torneoId,
+                  numero_prueba: parseInt(numPrueba) || 1,
+                  estilo: estilo,
+                  categoria: cat,
+                  genero: genero
+                });
+              }
             }
+          });
+
+          if (reemplazar) {
+            await supabaseClient.from('pruebas_torneo').delete().eq('torneo_id', torneoId);
           }
-        });
 
-        if (pruebasParaInsertar.length > 0) {
-          const { error } = await supabaseClient.from('pruebas_torneo').insert(pruebasParaInsertar);
-          if (error) alert("Error guardando pruebas: " + error.message);
-          else alert(`¡Éxito! Se cargaron ${pruebasParaInsertar.length} pruebas automáticamente desde el archivo de Meet Manager.`);
-        } else {
-          alert("Torneo creado. Si el archivo no contenía texto plano visible de pruebas, puedes agregarlas manualmente abajo.");
-        }
-        location.reload();
-      };
+          if (pruebasParaInsertar.length > 0) {
+            const { error } = await supabaseClient.from('pruebas_torneo').insert(pruebasParaInsertar);
+            if (error) alert("Error guardando pruebas: " + error.message);
+            else alert(`¡Éxito! Se procesaron y guardaron ${pruebasParaInsertar.length} pruebas desde el archivo de Meet Manager.`);
+          } else {
+            alert("Atención: El torneo fue creado pero no se detectaron pruebas válidas en el archivo subido. Revisa la exportación en Meet Manager.");
+          }
+          resolve();
+        };
 
-      reader.readAsText(file);
+        reader.readAsText(file);
+      });
     }
 
     async function crearNuevoTorneo() {
@@ -388,6 +404,7 @@
       const fileInput = document.getElementById('archivo-hyv-input');
 
       if (!nombre || !fecha || !cierre) return alert("Completa los datos del torneo.");
+      if (fileInput.files.length === 0) return alert("Selecciona el archivo de pruebas (.HYV / .TXT) exportado de Meet Manager.");
 
       await supabaseClient.from('torneos').update({ activo: false }).neq('id', 0);
 
@@ -399,13 +416,71 @@
         alert("Error al crear torneo: " + error.message);
       } else {
         const torneoCreado = data[0];
-        if (fileInput.files.length > 0) {
-          await procesarArchivoPruebasMeetManager(fileInput.files[0], torneoCreado.id);
-        } else {
-          alert("Torneo creado con éxito. Puedes ingresar las pruebas manualmente.");
-          location.reload();
-        }
+        await procesarArchivoPruebasMeetManager(fileInput.files[0], torneoCreado.id);
+        location.reload();
       }
+    }
+
+    // --- EDICIÓN DE TORNEOS --- //
+
+    async function cargarListaTorneosParaEditar() {
+      const { data: torneos } = await supabaseClient.from('torneos').select('*').order('id', { ascending: false });
+      listaTorneosGlobal = torneos || [];
+      const select = document.getElementById('select-torneo-editar');
+      
+      if (listaTorneosGlobal.length > 0) {
+        select.innerHTML = '<option value="">-- Selecciona un torneo --</option>' + 
+          listaTorneosGlobal.map(t => `<option value="${t.id}">${t.nombre_torneo} (${t.fecha_inicio})</option>`).join('');
+      }
+    }
+
+    function cargarDatosTorneoParaEditar() {
+      const id = document.getElementById('select-torneo-editar').value;
+      const bloque = document.getElementById('bloque-edicion-torneo');
+
+      if (!id) {
+        bloque.style.display = 'none';
+        return;
+      }
+
+      const torneo = listaTorneosGlobal.find(t => t.id == id);
+      if (torneo) {
+        document.getElementById('edit-torneo-nombre').value = torneo.nombre_torneo;
+        document.getElementById('edit-torneo-fecha').value = torneo.fecha_inicio;
+        
+        if (torneo.fecha_cierre_inscripcion) {
+          const d = new Date(torneo.fecha_cierre_inscripcion);
+          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+          document.getElementById('edit-torneo-cierre').value = d.toISOString().slice(0, 16);
+        }
+
+        bloque.style.display = 'block';
+      }
+    }
+
+    async function guardarCambiosTorneo() {
+      const id = document.getElementById('select-torneo-editar').value;
+      const nombre = document.getElementById('edit-torneo-nombre').value;
+      const fecha = document.getElementById('edit-torneo-fecha').value;
+      const cierre = document.getElementById('edit-torneo-cierre').value;
+      const fileInput = document.getElementById('edit-archivo-hyv-input');
+
+      if (!id || !nombre || !fecha || !cierre) return alert("Completa todos los campos obligatorios.");
+
+      const { error } = await supabaseClient
+        .from('torneos')
+        .update({ nombre_torneo: nombre, fecha_inicio: fecha, fecha_cierre_inscripcion: cierre })
+        .eq('id', id);
+
+      if (error) return alert("Error actualizando torneo: " + error.message);
+
+      if (fileInput.files.length > 0) {
+        await procesarArchivoPruebasMeetManager(fileInput.files[0], id, true);
+      } else {
+        alert("Datos del torneo actualizados correctamente.");
+      }
+
+      location.reload();
     }
 
     async function cargarTorneoActivo() {
@@ -563,26 +638,6 @@
           Prueba ${i.pruebas_torneo.numero_prueba}: ${i.pruebas_torneo.estilo} (${i.tiempo_inscripcion})
         </div>
       `).join('');
-    }
-
-    async function agregarPruebaTorneo() {
-      if (!torneoActivoObj) return alert("Primero crea o activa un torneo.");
-      const num = document.getElementById('prueba-num').value;
-      const estilo = document.getElementById('prueba-estilo').value;
-      const cat = document.getElementById('prueba-cat').value;
-      const gen = document.getElementById('prueba-genero').value;
-
-      if (!num || !estilo || !cat) return alert("Completa los datos de la prueba.");
-
-      const { error } = await supabaseClient.from('pruebas_torneo').insert([
-        { torneo_id: torneoActivoObj.id, numero_prueba: num, estilo, categoria: cat, genero: gen }
-      ]);
-
-      if (error) alert("Error creando prueba: " + error.message);
-      else {
-        alert(`Prueba ${num} agregada con éxito.`);
-        cargarPruebasTorneo(torneoActivoObj.id);
-      }
     }
 
     async function exportarInscripcionesHYTEK() {
