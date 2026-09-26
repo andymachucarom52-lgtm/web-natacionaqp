@@ -43,7 +43,7 @@
   <!-- ESTRUCTURA PRINCIPAL DE 3 COLUMNAS -->
   <div class="layout-tres-columnas">
 
-    <!-- COLUMNA IZQUIERDA: Accesos Directos a Secciones (Acordeones) -->
+    <!-- COLUMNA IZQUIERDA: Accesos Directos a Secciones -->
     <aside class="columna-izquierda">
       <h2 class="titulo-columna">📌 Menú de Secciones</h2>
 
@@ -240,16 +240,20 @@
 
       <div id="panel-carga" style="display:none;">
         <hr style="margin: 15px 0;">
-        <h4 style="color: #003845;">1. Gestión de Torneo y Pruebas</h4>
+        <h4 style="color: #003845;">1. Crear Torneo y Cargar Pruebas de Meet Manager</h4>
         <input type="text" id="torneo-nombre" placeholder="Nombre del Torneo" class="input-admin">
         <label style="font-size: 0.8rem;">Fecha del Torneo:</label>
         <input type="date" id="torneo-fecha" class="input-admin">
         <label style="font-size: 0.8rem;">Cierre de Inscripciones:</label>
         <input type="datetime-local" id="torneo-cierre" class="input-admin">
-        <button onclick="crearNuevoTorneo()" class="btn-primario">Crear Torneo Activo</button>
+        
+        <label style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; display: block;">Archivo de Pruebas (.HYV / .TXT) de Meet Manager:</label>
+        <input type="file" id="archivo-hyv-input" accept=".hyv,.txt,.zip" class="input-admin">
+        
+        <button onclick="crearNuevoTorneo()" class="btn-primario">Crear Torneo y Cargar Pruebas</button>
 
         <hr style="margin: 15px 0;">
-        <h4 style="color: #003845;">2. Agregar Pruebas al Torneo Activo</h4>
+        <h4 style="color: #003845;">2. Agregar Pruebas Manualmente (Opcional)</h4>
         <input type="number" id="prueba-num" placeholder="N° Prueba (Ej. 1)" class="input-admin">
         <input type="text" id="prueba-estilo" placeholder="Prueba (Ej. 50m Libre)" class="input-admin">
         <input type="text" id="prueba-cat" placeholder="Categoría (Ej. Infantil B)" class="input-admin">
@@ -258,7 +262,7 @@
           <option value="F">Damas</option>
           <option value="X">Mixto</option>
         </select>
-        <button onclick="agregarPruebaTorneo()" class="btn-primario">Agregar Prueba</button>
+        <button onclick="agregarPruebaTorneo()" class="btn-primario">Agregar Prueba Manual</button>
 
         <hr style="margin: 15px 0;">
         <h4 style="color: #003845;">3. Publicar en Muro Central</h4>
@@ -335,7 +339,74 @@
       return (match && match[1]) ? `https://www.tiktok.com/embed/v2/${match[1]}` : urlOriginal;
     }
 
-    // --- LÓGICA DE INSCRIPCIONES --- //
+    // --- LÓGICA DE INSCRIPCIONES Y PROCESAMIENTO HY-TEK --- //
+
+    async function procesarArchivoPruebasMeetManager(file, torneoId) {
+      const reader = new FileReader();
+      
+      reader.onload = async function(e) {
+        const contenido = e.target.result;
+        const lineas = contenido.split('\n');
+        let pruebasParaInsertar = [];
+
+        lineas.forEach(linea => {
+          if (linea.startsWith('D1') || linea.startsWith('E1') || linea.includes('Mtr') || linea.includes('Free') || linea.includes('Libre')) {
+            const numPrueba = linea.substring(2, 6).trim() || Math.floor(Math.random() * 100);
+            const genero = linea.includes('F') ? 'F' : (linea.includes('M') ? 'M' : 'X');
+            const estilo = linea.substring(10, 40).trim() || "Prueba Oficial";
+            const cat = "Open / Oficial";
+
+            if (numPrueba && estilo) {
+              pruebasParaInsertar.push({
+                torneo_id: torneoId,
+                numero_prueba: parseInt(numPrueba) || 1,
+                estilo: estilo,
+                categoria: cat,
+                genero: genero
+              });
+            }
+          }
+        });
+
+        if (pruebasParaInsertar.length > 0) {
+          const { error } = await supabaseClient.from('pruebas_torneo').insert(pruebasParaInsertar);
+          if (error) alert("Error guardando pruebas: " + error.message);
+          else alert(`¡Éxito! Se cargaron ${pruebasParaInsertar.length} pruebas automáticamente desde el archivo de Meet Manager.`);
+        } else {
+          alert("Torneo creado. Si el archivo no contenía texto plano visible de pruebas, puedes agregarlas manualmente abajo.");
+        }
+        location.reload();
+      };
+
+      reader.readAsText(file);
+    }
+
+    async function crearNuevoTorneo() {
+      const nombre = document.getElementById('torneo-nombre').value;
+      const fecha = document.getElementById('torneo-fecha').value;
+      const cierre = document.getElementById('torneo-cierre').value;
+      const fileInput = document.getElementById('archivo-hyv-input');
+
+      if (!nombre || !fecha || !cierre) return alert("Completa los datos del torneo.");
+
+      await supabaseClient.from('torneos').update({ activo: false }).neq('id', 0);
+
+      const { data, error } = await supabaseClient.from('torneos').insert([
+        { nombre_torneo: nombre, fecha_inicio: fecha, fecha_cierre_inscripcion: cierre, activo: true }
+      ]).select();
+
+      if (error) {
+        alert("Error al crear torneo: " + error.message);
+      } else {
+        const torneoCreado = data[0];
+        if (fileInput.files.length > 0) {
+          await procesarArchivoPruebasMeetManager(fileInput.files[0], torneoCreado.id);
+        } else {
+          alert("Torneo creado con éxito. Puedes ingresar las pruebas manualmente.");
+          location.reload();
+        }
+      }
+    }
 
     async function cargarTorneoActivo() {
       const { data: torneos, error } = await supabaseClient
@@ -479,7 +550,6 @@
         return;
       }
 
-      // Filtrar por club seleccionado
       const delClub = inscritos.filter(i => i.nadadores && i.nadadores.club_id == clubSeleccionadoId);
 
       if (delClub.length === 0) {
@@ -493,29 +563,6 @@
           Prueba ${i.pruebas_torneo.numero_prueba}: ${i.pruebas_torneo.estilo} (${i.tiempo_inscripcion})
         </div>
       `).join('');
-    }
-
-    // --- FUNCIONES DEL PANEL ADMIN --- //
-
-    async function crearNuevoTorneo() {
-      const nombre = document.getElementById('torneo-nombre').value;
-      const fecha = document.getElementById('torneo-fecha').value;
-      const cierre = document.getElementById('torneo-cierre').value;
-
-      if (!nombre || !fecha || !cierre) return alert("Completa los datos del torneo.");
-
-      // Desactivar torneos anteriores
-      await supabaseClient.from('torneos').update({ activo: false }).neq('id', 0);
-
-      const { error } = await supabaseClient.from('torneos').insert([
-        { nombre_torneo: nombre, fecha_inicio: fecha, fecha_cierre_inscripcion: cierre, activo: true }
-      ]);
-
-      if (error) alert("Error al crear torneo: " + error.message);
-      else {
-        alert("Torneo activado con éxito.");
-        location.reload();
-      }
     }
 
     async function agregarPruebaTorneo() {
