@@ -18,6 +18,8 @@
   
   <!-- SDK de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- JSZip para lectura directa de archivos ZIP de HY-TEK / Meet Manager -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -247,8 +249,8 @@
         <label style="font-size: 0.8rem;">Cierre de Inscripciones:</label>
         <input type="datetime-local" id="torneo-cierre" class="input-admin">
         
-        <label style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; display: block;">Archivo de Pruebas (.HYV / .TXT) de Meet Manager:</label>
-        <input type="file" id="archivo-hyv-input" accept=".hyv,.txt,.zip" class="input-admin" required>
+        <label style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; display: block;">Archivo de Pruebas (.ZIP / .HYV / .EV3 / .TXT) de Meet Manager:</label>
+        <input type="file" id="archivo-hyv-input" accept=".zip,.hyv,.ev3,.txt" class="input-admin" required>
         
         <button onclick="crearNuevoTorneo()" class="btn-primario">Crear Torneo y Cargar Pruebas</button>
 
@@ -266,8 +268,8 @@
           <label style="font-size: 0.8rem;">Cierre de Inscripciones:</label>
           <input type="datetime-local" id="edit-torneo-cierre" class="input-admin">
 
-          <label style="font-size: 0.8rem; font-weight: bold; margin-top: 8px; display: block; color: #15803d;">Actualizar / Reemplazar Pruebas (.HYV / .TXT):</label>
-          <input type="file" id="edit-archivo-hyv-input" accept=".hyv,.txt,.zip" class="input-admin">
+          <label style="font-size: 0.8rem; font-weight: bold; margin-top: 8px; display: block; color: #15803d;">Actualizar / Reemplazar Pruebas (.ZIP / .HYV / .EV3 / .TXT):</label>
+          <input type="file" id="edit-archivo-hyv-input" accept=".zip,.hyv,.ev3,.txt" class="input-admin">
 
           <button onclick="guardarCambiosTorneo()" class="btn-primario" style="background: #16a34a; margin-top: 8px;">💾 Guardar Cambios de Torneo y Pruebas</button>
         </div>
@@ -349,51 +351,92 @@
       return (match && match[1]) ? `https://www.tiktok.com/embed/v2/${match[1]}` : urlOriginal;
     }
 
-    // --- LÓGICA DE INSCRIPCIONES Y PROCESAMIENTO HY-TEK --- //
+    // --- LÓGICA DE INSCRIPCIONES Y PROCESAMIENTO HY-TEK CON SOPORTE ZIP --- //
 
     async function procesarArchivoPruebasMeetManager(file, torneoId, reemplazar = false) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        
-        reader.onload = async function(e) {
-          const contenido = e.target.result;
-          const lineas = contenido.split('\n');
-          let pruebasParaInsertar = [];
+      return new Promise(async (resolve, reject) => {
+        let contenidoTexto = "";
 
-          lineas.forEach(linea => {
-            if (linea.startsWith('D1') || linea.startsWith('E1') || linea.includes('Mtr') || linea.includes('Free') || linea.includes('Libre')) {
-              const numPrueba = linea.substring(2, 6).trim() || Math.floor(Math.random() * 100);
-              const genero = linea.includes('F') ? 'F' : (linea.includes('M') ? 'M' : 'X');
-              const estilo = linea.substring(10, 40).trim() || "Prueba Oficial";
-              const cat = "Open / Oficial";
-
-              if (numPrueba && estilo) {
-                pruebasParaInsertar.push({
-                  torneo_id: torneoId,
-                  numero_prueba: parseInt(numPrueba) || 1,
-                  estilo: estilo,
-                  categoria: cat,
-                  genero: genero
-                });
+        if (file.name.toLowerCase().endsWith('.zip')) {
+          try {
+            const zip = new JSZip();
+            const zipCargado = await zip.loadAsync(file);
+            
+            let archivoObjetivo = null;
+            zipCargado.forEach((relativePath, zipEntry) => {
+              const ext = relativePath.toLowerCase();
+              if (ext.endsWith('.hyv') || ext.endsWith('.ev3') || ext.endsWith('.txt')) {
+                archivoObjetivo = zipEntry;
               }
+            });
+
+            if (archivoObjetivo) {
+              contenidoTexto = await archivoObjetivo.async("string");
+            } else {
+              alert("No se encontró ningún archivo .HYV o .EV3 dentro del archivo ZIP.");
+              resolve();
+              return;
             }
+          } catch (err) {
+            alert("Error al descomprimir archivo ZIP: " + err.message);
+            resolve();
+            return;
+          }
+        } else {
+          const reader = new FileReader();
+          contenidoTexto = await new Promise((res) => {
+            reader.onload = (e) => res(e.target.result);
+            reader.readAsText(file, 'ISO-8859-1');
           });
+        }
 
-          if (reemplazar) {
-            await supabaseClient.from('pruebas_torneo').delete().eq('torneo_id', torneoId);
+        const lineas = contenidoTexto.split(/\r?\n/);
+        let pruebasParaInsertar = [];
+        let contadorManual = 1;
+
+        lineas.forEach(linea => {
+          const l = linea.trim();
+          if (!l) return;
+
+          if (l.startsWith('D1') || l.startsWith('E1') || l.startsWith('EV') || l.includes('Mtr') || l.includes('Free') || l.includes('Libre') || l.includes('Fly') || l.includes('Back') || l.includes('Breast')) {
+            let numPrueba = contadorManual;
+            const matchNum = l.match(/(\d+)/);
+            if (matchNum && matchNum[1]) {
+              numPrueba = parseInt(matchNum[1]);
+            }
+
+            let genero = 'X';
+            if (l.includes(' F ') || l.includes('Damas') || l.includes('Female')) genero = 'F';
+            else if (l.includes(' M ') || l.includes('Varones') || l.includes('Male')) genero = 'M';
+
+            let estilo = l.substring(0, 50).replace(/[^a-zA-Z0-9\s]/g, " ").trim();
+            if (estilo.length < 3) estilo = `Prueba ${numPrueba}`;
+
+            pruebasParaInsertar.push({
+              torneo_id: torneoId,
+              numero_prueba: numPrueba,
+              estilo: estilo,
+              categoria: "Oficial",
+              genero: genero
+            });
+
+            contadorManual++;
           }
+        });
 
-          if (pruebasParaInsertar.length > 0) {
-            const { error } = await supabaseClient.from('pruebas_torneo').insert(pruebasParaInsertar);
-            if (error) alert("Error guardando pruebas: " + error.message);
-            else alert(`¡Éxito! Se procesaron y guardaron ${pruebasParaInsertar.length} pruebas desde el archivo de Meet Manager.`);
-          } else {
-            alert("Atención: El torneo fue creado pero no se detectaron pruebas válidas en el archivo subido. Revisa la exportación en Meet Manager.");
-          }
-          resolve();
-        };
+        if (reemplazar) {
+          await supabaseClient.from('pruebas_torneo').delete().eq('torneo_id', torneoId);
+        }
 
-        reader.readAsText(file);
+        if (pruebasParaInsertar.length > 0) {
+          const { error } = await supabaseClient.from('pruebas_torneo').insert(pruebasParaInsertar);
+          if (error) alert("Error guardando pruebas: " + error.message);
+          else alert(`¡Éxito! Se descomprimieron e importaron ${pruebasParaInsertar.length} pruebas directamente desde el archivo de Meet Manager.`);
+        } else {
+          alert("Atención: El archivo se abrió correctamente pero no se detectaron registros de pruebas. Revisa la exportación en Meet Manager.");
+        }
+
+        resolve();
       });
     }
 
@@ -404,7 +447,7 @@
       const fileInput = document.getElementById('archivo-hyv-input');
 
       if (!nombre || !fecha || !cierre) return alert("Completa los datos del torneo.");
-      if (fileInput.files.length === 0) return alert("Selecciona el archivo de pruebas (.HYV / .TXT) exportado de Meet Manager.");
+      if (fileInput.files.length === 0) return alert("Selecciona el archivo de pruebas (.ZIP / .HYV / .EV3) exportado de Meet Manager.");
 
       await supabaseClient.from('torneos').update({ activo: false }).neq('id', 0);
 
