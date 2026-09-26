@@ -36,7 +36,7 @@
   <header class="encabezado-piscina">
     <div class="linea-piscina">
       <img src="logo.png" alt="Logo Natación Arequipa" class="logo-izq">
-      <h1 class="titulo-3d" style="font-size: 6.5rem; line-height: 1;">Natación Arequipa</h1>
+      <h1 class="titulo-3d" style="font-size: 2.8rem; line-height: 1;">Natación Arequipa</h1>
     </div>
   </header>
 
@@ -59,10 +59,75 @@
         </div>
       </details>
 
-      <details class="acordeon-seccion" id="inscripciones">
-        <summary class="acordeon-titulo">📝 Inscripciones</summary>
+      <!-- MÓDULO DE INSCRIPCIONES EN LÍNEA -->
+      <details class="acordeon-seccion" id="inscripciones" open>
+        <summary class="acordeon-titulo">📝 Inscripciones en Línea</summary>
         <div class="acordeon-contenido">
-          <p>Próximamente habilitaremos el módulo de inscripciones en línea.</p>
+          
+          <!-- Info Torneo Activo -->
+          <div id="info-torneo-activo" style="background: #e0f2fe; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+            <h4 id="lbl-nombre-torneo" style="color: #0369a1; margin: 0;">Buscando campeonato activo...</h4>
+            <p id="lbl-cierre-torneo" style="font-size: 0.8rem; color: #0c4a6e; margin: 5px 0 0 0;"></p>
+          </div>
+
+          <!-- Selección de Club -->
+          <div id="seccion-login-club">
+            <label style="font-size: 0.85rem; font-weight: bold;">Selecciona tu Club:</label>
+            <select id="select-club" class="input-admin" style="width: 100%; margin: 6px 0;">
+              <option value="">-- Cargar Clubes --</option>
+            </select>
+            <button onclick="ingresarClub()" class="btn-primario" style="width: 100%;">Ingresar a Inscribir</button>
+          </div>
+
+          <!-- Panel de Inscripción del Club -->
+          <div id="panel-inscripcion-club" style="display: none; margin-top: 10px;">
+            <hr>
+            <h4 id="titulo-club-sesion" style="color: #005f73; margin-bottom: 8px;">Club: </h4>
+            
+            <!-- Paso 1: Nadador -->
+            <div style="margin-bottom: 10px;">
+              <label style="font-size: 0.85rem; font-weight: bold;">1. Selecciona Nadador:</label>
+              <select id="select-nadador-club" class="input-admin" style="width: 100%; margin-top: 4px;">
+                <option value="">-- Seleccionar --</option>
+              </select>
+              <button onclick="toggleFormNuevoNadador()" style="background: #2a9d8f; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; margin-top: 6px; cursor: pointer; width: 100%;">
+                ➕ Registrar Nadador No Listado
+              </button>
+            </div>
+
+            <!-- Formulario Nuevo Nadador -->
+            <div id="form-nuevo-nadador" style="display: none; background: #f8fafc; padding: 10px; border: 1px dashed #0077b6; border-radius: 6px; margin-bottom: 10px;">
+              <h5 style="margin: 0 0 6px 0; color: #0077b6;">Nuevo Nadador</h5>
+              <input type="text" id="nad-nombres" placeholder="Nombres" class="input-admin">
+              <input type="text" id="nad-apellidos" placeholder="Apellidos" class="input-admin">
+              <input type="text" id="nad-dni" placeholder="DNI / Carnet" class="input-admin">
+              <label style="font-size: 0.75rem;">Fecha Nacimiento:</label>
+              <input type="date" id="nad-fnac" class="input-admin">
+              <select id="nad-genero" class="input-admin">
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+              </select>
+              <button onclick="guardarNuevoNadador()" class="btn-primario" style="font-size: 0.8rem; width: 100%;">Guardar Nadador</button>
+            </div>
+
+            <!-- Paso 2: Pruebas -->
+            <div style="margin-bottom: 10px;">
+              <label style="font-size: 0.85rem; font-weight: bold;">2. Selecciona Prueba:</label>
+              <select id="select-prueba-torneo" class="input-admin" style="width: 100%; margin-top: 4px;">
+                <option value="">-- Seleccionar Prueba --</option>
+              </select>
+              <input type="text" id="tiempo-inscripcion" placeholder="Tiempo (ej. 00:32.50 o NT)" class="input-admin" value="NT" style="margin-top: 4px;">
+            </div>
+
+            <button id="btn-confirmar-inscripcion" onclick="registrarInscripcionFinal()" class="btn-primario" style="width: 100%;">📥 Guardar Inscripción</button>
+
+            <!-- Lista de Inscritos -->
+            <h5 style="margin-top: 15px; color: #003845;">Planilla del Club para este torneo:</h5>
+            <div id="lista-resumen-inscritos" style="font-size: 0.8rem; max-height: 150px; overflow-y: auto; background: #fff; border: 1px solid #ddd; padding: 5px; border-radius: 4px;">
+              Sin inscripciones aún.
+            </div>
+          </div>
+
         </div>
       </details>
 
@@ -70,7 +135,6 @@
         <summary class="acordeon-titulo">🏆 Resultados Anteriores</summary>
         <div class="acordeon-contenido">
           <p>Planillas e históricos de competencias anteriores:</p>
-          <!-- Contenedor dinámico de PDFs cargados desde Supabase -->
           <ul id="lista-pdf-resultados" class="lista-resultados">
             <li>Cargando resultados...</li>
           </ul>
@@ -101,20 +165,19 @@
       </details>
     </aside>
 
-    <!-- COLUMNA CENTRAL: Muro Dinámico de Publicaciones -->
+    <!-- COLUMNA CENTRAL: Muro Dinámico -->
     <main class="columna-centro">
       <div class="muro-publicacion">
         <h2>📣 Novedades y Destacados</h2>
         <p>Revive las mejores pruebas y entérate de los próximos eventos:</p>
       </div>
 
-      <!-- Contenedor dinámico donde se cargarán las publicaciones de Supabase -->
       <div id="muro-posts-dinamicos" class="columna-centro">
         <p>Cargando novedades...</p>
       </div>
     </main>
 
-    <!-- COLUMNA DERECHA: Widgets de Accesos Rápidos y Tiempo Real -->
+    <!-- COLUMNA DERECHA: Widgets -->
     <aside class="columna-derecha">
       <h2 class="titulo-columna">⚡ Accesos Rápidos</h2>
 
@@ -127,12 +190,11 @@
         </a>
       </div>
 
-      <!-- WIDGET: Visor del Reglamento World Aquatics en Español -->
+      <!-- WIDGET: Reglamento World Aquatics -->
       <div class="tarjeta-derecha" style="margin-top: 15px;">
         <h3>📖 Reglamento World Aquatics</h3>
         <p style="font-size: 0.85rem; color: #555; margin-bottom: 8px;">Reglamento oficial traducido al español:</p>
 
-        <!-- Visor PDF embebido desde tu bucket REGLAMENTO con la URL directa -->
         <iframe 
           id="visor-reglamento-pdf"
           src="https://uzzelqylxzggnjdevrcu.supabase.co/storage/v1/object/public/REGLAMENTO/2026-02-18_World-Aquatics_Reglamento%20traducido%20SA.pdf#toolbar=0" 
@@ -151,7 +213,6 @@
         </a>
       </div>
 
-      <!-- Widget Informativo Adicional -->
       <div class="tarjeta-derecha" style="margin-top: 15px;">
         <h3>Aviso Institucional</h3>
         <p style="font-size: 0.85rem; color: #444;">
@@ -162,64 +223,87 @@
 
   </div>
 
-  <!-- Botón Flotante para Abrir Panel Admin -->
+  <!-- Botón Flotante Admin -->
   <button id="btn-admin-flotante" onclick="abrirAdmin()">🔐 Panel Admin</button>
 
-  <!-- Modal / Ventana de Administración -->
+  <!-- Modal Admin -->
   <div id="modal-admin">
     <div class="modal-contenido" style="max-height: 85vh; overflow-y: auto;">
       <span class="cerrar-modal" onclick="cerrarAdmin()">&times;</span>
       <h3 style="color: #005f73; margin-bottom: 15px;">Administración del Portal</h3>
 
-      <!-- Validar Contraseña -->
       <div id="login-admin">
         <label style="font-size: 0.9rem; font-weight: bold;">Contraseña de administración:</label>
         <input type="password" id="clave-admin" placeholder="Ingresa la clave" style="width: 100%; padding: 8px; margin: 10px 0;">
         <button onclick="validarClave()" class="btn-primario">Ingresar</button>
       </div>
 
-      <!-- Formulario de Carga y Gestión -->
       <div id="panel-carga" style="display:none;">
         <hr style="margin: 15px 0;">
-        <h4 style="color: #003845;">1. Publicar en Muro Central</h4>
+        <h4 style="color: #003845;">1. Gestión de Torneo y Pruebas</h4>
+        <input type="text" id="torneo-nombre" placeholder="Nombre del Torneo" class="input-admin">
+        <label style="font-size: 0.8rem;">Fecha del Torneo:</label>
+        <input type="date" id="torneo-fecha" class="input-admin">
+        <label style="font-size: 0.8rem;">Cierre de Inscripciones:</label>
+        <input type="datetime-local" id="torneo-cierre" class="input-admin">
+        <button onclick="crearNuevoTorneo()" class="btn-primario">Crear Torneo Activo</button>
+
+        <hr style="margin: 15px 0;">
+        <h4 style="color: #003845;">2. Agregar Pruebas al Torneo Activo</h4>
+        <input type="number" id="prueba-num" placeholder="N° Prueba (Ej. 1)" class="input-admin">
+        <input type="text" id="prueba-estilo" placeholder="Prueba (Ej. 50m Libre)" class="input-admin">
+        <input type="text" id="prueba-cat" placeholder="Categoría (Ej. Infantil B)" class="input-admin">
+        <select id="prueba-genero" class="input-admin">
+          <option value="M">Varones</option>
+          <option value="F">Damas</option>
+          <option value="X">Mixto</option>
+        </select>
+        <button onclick="agregarPruebaTorneo()" class="btn-primario">Agregar Prueba</button>
+
+        <hr style="margin: 15px 0;">
+        <h4 style="color: #003845;">3. Publicar en Muro Central</h4>
         <input type="text" id="post-titulo" placeholder="Título de la publicación" class="input-admin">
         <select id="post-tipo" onchange="cambiarTipoMedia()" class="input-admin">
           <option value="imagen">Imagen / Afiche (Archivo)</option>
           <option value="tiktok">Video TikTok (Enlace)</option>
         </select>
-        
         <input type="file" id="post-archivo" accept="image/*" class="input-admin">
         <input type="text" id="post-url-tiktok" placeholder="URL del video de TikTok" style="display:none;" class="input-admin">
-        
         <button onclick="subirPublicacion()" class="btn-primario">Publicar en Muro</button>
 
         <hr style="margin: 15px 0;">
-        <h4 style="color: #003845;">2. Subir PDF de Resultados Anteriores</h4>
+        <h4 style="color: #003845;">4. Subir PDF de Resultados</h4>
         <input type="text" id="pdf-nombre" placeholder="Nombre de la competencia" class="input-admin">
         <input type="file" id="pdf-archivo" accept="application/pdf" class="input-admin">
         <button onclick="subirPDF()" class="btn-primario">Subir Resultados PDF</button>
 
         <hr style="margin: 15px 0;">
-        <h4 style="color: #003845;">3. Administrar / Eliminar Publicaciones</h4>
+        <h4 style="color: #003845;">5. Exportar Inscripciones (Para HY-TEK)</h4>
+        <button onclick="exportarInscripcionesHYTEK()" style="background: #2a9d8f; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer;">
+          📊 Descargar Planilla de Inscripciones (CSV)
+        </button>
+
+        <hr style="margin: 15px 0;">
+        <h4 style="color: #003845;">6. Administrar Publicaciones</h4>
         <div id="lista-admin-publicaciones">
-          <p style="font-size: 0.85rem; color: #666;">Cargando lista de publicaciones...</p>
+          <p style="font-size: 0.85rem; color: #666;">Cargando lista...</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Pie de página institucional -->
   <footer>
     <p>Cuerpo de jueces de natación competitiva, Arequipa, Perú, afiliados a la Federación Deportiva Nacional de Deportes Acuáticos</p>
   </footer>
 
   <script>
-    // Configuración de conexión a Supabase
     const SUPABASE_URL = "https://uzzelqylxzggnjdevrcu.supabase.co";
     const SUPABASE_KEY = "sb_publishable_FIisK0H2qX8fNaJNtLByeA_IU4nYT6-";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const CLAVE_CORRECTA = "Arequipa2026*"; 
+    let torneoActivoObj = null;
+    let clubSeleccionadoId = null;
 
     function abrirAdmin() { document.getElementById('modal-admin').style.display = 'flex'; }
     function cerrarAdmin() { document.getElementById('modal-admin').style.display = 'none'; }
@@ -231,46 +315,263 @@
         document.getElementById('panel-carga').style.display = 'block';
         cargarGestionPublicaciones();
       } else {
-        alert("Contraseña incorrecta. Intenta nuevamente.");
+        alert("Contraseña incorrecta.");
       }
     }
 
     function cambiarTipoMedia() {
       const tipo = document.getElementById('post-tipo').value;
-      if (tipo === 'tiktok') {
-        document.getElementById('post-archivo').style.display = 'none';
-        document.getElementById('post-url-tiktok').style.display = 'block';
-      } else {
-        document.getElementById('post-archivo').style.display = 'block';
-        document.getElementById('post-url-tiktok').style.display = 'none';
-      }
+      document.getElementById('post-archivo').style.display = (tipo === 'imagen') ? 'block' : 'none';
+      document.getElementById('post-url-tiktok').style.display = (tipo === 'tiktok') ? 'block' : 'none';
     }
 
     function limpiarNombreArchivo(nombreOriginal) {
-      return nombreOriginal
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/ñ/g, "n")
-        .replace(/Ñ/g, "N")
-        .replace(/[^a-zA-Z0-9.-]/g, "_");
+      return nombreOriginal.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ñ/g, "n").replace(/Ñ/g, "N").replace(/[^a-zA-Z0-9.-]/g, "_");
     }
 
     function obtenerUrlEmbedTikTok(urlOriginal) {
       if (!urlOriginal.includes('tiktok.com')) return urlOriginal;
       const match = urlOriginal.match(/\/video\/(\d+)/);
-      if (match && match[1]) {
-        return `https://www.tiktok.com/embed/v2/${match[1]}`;
-      }
-      return urlOriginal;
+      return (match && match[1]) ? `https://www.tiktok.com/embed/v2/${match[1]}` : urlOriginal;
     }
 
-    // Subir publicación al Muro Central
+    // --- LÓGICA DE INSCRIPCIONES --- //
+
+    async function cargarTorneoActivo() {
+      const { data: torneos, error } = await supabaseClient
+        .from('torneos')
+        .select('*')
+        .eq('activo', true)
+        .order('id', { ascending: false })
+        .limit(1);
+
+      if (error || !torneos || torneos.length === 0) {
+        document.getElementById('lbl-nombre-torneo').innerText = "No hay torneos activos actualmente";
+        document.getElementById('lbl-cierre-torneo').innerText = "";
+        return;
+      }
+
+      torneoActivoObj = torneos[0];
+      document.getElementById('lbl-nombre-torneo').innerText = torneoActivoObj.nombre_torneo;
+      
+      const fechaCierre = new Date(torneoActivoObj.fecha_cierre_inscripcion);
+      const ahora = new Date();
+
+      if (ahora > fechaCierre) {
+        document.getElementById('lbl-cierre-torneo').innerText = "🔴 INSCRIPCIONES CERRADAS";
+        document.getElementById('btn-confirmar-inscripcion').disabled = true;
+        document.getElementById('btn-confirmar-inscripcion').innerText = "Inscripciones Finalizadas";
+      } else {
+        document.getElementById('lbl-cierre-torneo').innerText = `⏳ Cierre: ${fechaCierre.toLocaleString()}`;
+      }
+
+      cargarClubes();
+      cargarPruebasTorneo(torneoActivoObj.id);
+    }
+
+    async function cargarClubes() {
+      const { data: clubes } = await supabaseClient.from('clubes').select('*').order('nombre_club');
+      const select = document.getElementById('select-club');
+      if (clubes) {
+        select.innerHTML = '<option value="">-- Selecciona Club --</option>' + 
+          clubes.map(c => `<option value="${c.id}">${c.nombre_club}</option>`).join('');
+      }
+    }
+
+    async function ingresarClub() {
+      const clubId = document.getElementById('select-club').value;
+      if (!clubId) return alert("Selecciona un club.");
+      
+      clubSeleccionadoId = clubId;
+      const clubNombre = document.getElementById('select-club').options[document.getElementById('select-club').selectedIndex].text;
+      
+      document.getElementById('titulo-club-sesion').innerText = `Club: ${clubNombre}`;
+      document.getElementById('panel-inscripcion-club').style.display = 'block';
+
+      cargarNadadoresClub(clubId);
+      cargarResumenInscritos();
+    }
+
+    async function cargarNadadoresClub(clubId) {
+      const { data: nadadores } = await supabaseClient
+        .from('nadadores')
+        .select('*')
+        .eq('club_id', clubId)
+        .order('apellidos');
+
+      const select = document.getElementById('select-nadador-club');
+      if (nadadores) {
+        select.innerHTML = '<option value="">-- Selecciona Nadador --</option>' + 
+          nadadores.map(n => `<option value="${n.id}">${n.apellidos}, ${n.nombres}</option>`).join('');
+      }
+    }
+
+    function toggleFormNuevoNadador() {
+      const f = document.getElementById('form-nuevo-nadador');
+      f.style.display = (f.style.display === 'none') ? 'block' : 'none';
+    }
+
+    async function guardarNuevoNadador() {
+      const nombres = document.getElementById('nad-nombres').value;
+      const apellidos = document.getElementById('nad-apellidos').value;
+      const dni = document.getElementById('nad-dni').value;
+      const fnac = document.getElementById('nad-fnac').value;
+      const genero = document.getElementById('nad-genero').value;
+
+      if (!nombres || !apellidos || !fnac) return alert("Completa los datos del nadador.");
+
+      const { error } = await supabaseClient.from('nadadores').insert([
+        { club_id: clubSeleccionadoId, nombres, apellidos, dni_carnet: dni, fecha_nacimiento: fnac, genero }
+      ]);
+
+      if (error) alert("Error guardando nadador: " + error.message);
+      else {
+        alert("Nadador registrado con éxito.");
+        toggleFormNuevoNadador();
+        cargarNadadoresClub(clubSeleccionadoId);
+      }
+    }
+
+    async function cargarPruebasTorneo(torneoId) {
+      const { data: pruebas } = await supabaseClient
+        .from('pruebas_torneo')
+        .select('*')
+        .eq('torneo_id', torneoId)
+        .order('numero_prueba');
+
+      const select = document.getElementById('select-prueba-torneo');
+      if (pruebas) {
+        select.innerHTML = '<option value="">-- Selecciona Prueba --</option>' + 
+          pruebas.map(p => `<option value="${p.id}">Prueba ${p.numero_prueba}: ${p.estilo} (${p.categoria} - ${p.genero})</option>`).join('');
+      }
+    }
+
+    async function registrarInscripcionFinal() {
+      if (!torneoActivoObj) return alert("No hay torneo activo.");
+      const nadadorId = document.getElementById('select-nadador-club').value;
+      const pruebaId = document.getElementById('select-prueba-torneo').value;
+      const tiempo = document.getElementById('tiempo-inscripcion').value || 'NT';
+
+      if (!nadadorId || !pruebaId) return alert("Selecciona el nadador y la prueba.");
+
+      const { error } = await supabaseClient.from('inscripciones').insert([
+        { torneo_id: torneoActivoObj.id, nadador_id: nadadorId, prueba_id: pruebaId, tiempo_inscripcion: tiempo }
+      ]);
+
+      if (error) alert("Error inscribiendo: " + error.message);
+      else {
+        alert("Inscripción guardada exitosamente.");
+        cargarResumenInscritos();
+      }
+    }
+
+    async function cargarResumenInscritos() {
+      if (!torneoActivoObj || !clubSeleccionadoId) return;
+
+      const { data: inscritos } = await supabaseClient
+        .from('inscripciones')
+        .select('*, nadadores(*), pruebas_torneo(*)')
+        .eq('torneo_id', torneoActivoObj.id);
+
+      const cont = document.getElementById('lista-resumen-inscritos');
+      if (!inscritos || inscritos.length === 0) {
+        cont.innerHTML = "Sin inscripciones aún.";
+        return;
+      }
+
+      // Filtrar por club seleccionado
+      const delClub = inscritos.filter(i => i.nadadores && i.nadadores.club_id == clubSeleccionadoId);
+
+      if (delClub.length === 0) {
+        cont.innerHTML = "Sin inscripciones registradas para este club.";
+        return;
+      }
+
+      cont.innerHTML = delClub.map(i => `
+        <div style="border-bottom: 1px solid #eee; padding: 4px 0;">
+          <strong>${i.nadadores.apellidos}, ${i.nadadores.nombres}</strong><br>
+          Prueba ${i.pruebas_torneo.numero_prueba}: ${i.pruebas_torneo.estilo} (${i.tiempo_inscripcion})
+        </div>
+      `).join('');
+    }
+
+    // --- FUNCIONES DEL PANEL ADMIN --- //
+
+    async function crearNuevoTorneo() {
+      const nombre = document.getElementById('torneo-nombre').value;
+      const fecha = document.getElementById('torneo-fecha').value;
+      const cierre = document.getElementById('torneo-cierre').value;
+
+      if (!nombre || !fecha || !cierre) return alert("Completa los datos del torneo.");
+
+      // Desactivar torneos anteriores
+      await supabaseClient.from('torneos').update({ activo: false }).neq('id', 0);
+
+      const { error } = await supabaseClient.from('torneos').insert([
+        { nombre_torneo: nombre, fecha_inicio: fecha, fecha_cierre_inscripcion: cierre, activo: true }
+      ]);
+
+      if (error) alert("Error al crear torneo: " + error.message);
+      else {
+        alert("Torneo activado con éxito.");
+        location.reload();
+      }
+    }
+
+    async function agregarPruebaTorneo() {
+      if (!torneoActivoObj) return alert("Primero crea o activa un torneo.");
+      const num = document.getElementById('prueba-num').value;
+      const estilo = document.getElementById('prueba-estilo').value;
+      const cat = document.getElementById('prueba-cat').value;
+      const gen = document.getElementById('prueba-genero').value;
+
+      if (!num || !estilo || !cat) return alert("Completa los datos de la prueba.");
+
+      const { error } = await supabaseClient.from('pruebas_torneo').insert([
+        { torneo_id: torneoActivoObj.id, numero_prueba: num, estilo, categoria: cat, genero: gen }
+      ]);
+
+      if (error) alert("Error creando prueba: " + error.message);
+      else {
+        alert(`Prueba ${num} agregada con éxito.`);
+        cargarPruebasTorneo(torneoActivoObj.id);
+      }
+    }
+
+    async function exportarInscripcionesHYTEK() {
+      if (!torneoActivoObj) return alert("No hay torneo activo.");
+
+      const { data: inscripciones } = await supabaseClient
+        .from('inscripciones')
+        .select('*, nadadores(*, clubes(*)), pruebas_torneo(*)')
+        .eq('torneo_id', torneoActivoObj.id);
+
+      if (!inscripciones || inscripciones.length === 0) return alert("No hay inscripciones registradas en este torneo.");
+
+      let csvContent = "data:text/csv;charset=utf-8,Club,Apellidos,Nombres,DNI,FechaNac,Genero,PruebaNum,PruebaEstilo,Tiempo\n";
+
+      inscripciones.forEach(i => {
+        const club = i.nadadores.clubes ? i.nadadores.clubes.nombre_club : "Sin Club";
+        csvContent += `"${club}","${i.nadadores.apellidos}","${i.nadadores.nombres}","${i.nadadores.dni_carnet}","${i.nadadores.fecha_nacimiento}","${i.nadadores.genero}","${i.pruebas_torneo.numero_prueba}","${i.pruebas_torneo.estilo}","${i.tiempo_inscripcion}"\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Inscripciones_${torneoActivoObj.nombre_torneo.replace(/\s+/g, '_')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // --- CARGAS DEL MURO Y PDFS --- //
+
     async function subirPublicacion() {
       const titulo = document.getElementById('post-titulo').value;
       const tipo = document.getElementById('post-tipo').value;
       let urlMedia = '';
 
-      if (!titulo) return alert("Escribe un título para la publicación.");
+      if (!titulo) return alert("Escribe un título.");
 
       if (tipo === 'imagen') {
         const file = document.getElementById('post-archivo').files[0];
@@ -280,70 +581,47 @@
         const nombreLimpio = limpiarNombreArchivo(file.name.replace('.' + fileExt, ''));
         const fileName = `${Date.now()}_${nombreLimpio}.${fileExt}`;
 
-        const { data, error } = await supabaseClient.storage.from('novedades').upload(fileName, file);
-        
+        const { error } = await supabaseClient.storage.from('novedades').upload(fileName, file);
         if (error) return alert("Error al subir archivo: " + error.message);
         urlMedia = `${SUPABASE_URL}/storage/v1/object/public/novedades/${fileName}`;
       } else {
         const rawUrl = document.getElementById('post-url-tiktok').value;
-        if (!rawUrl) return alert("Ingresa el enlace del video.");
+        if (!rawUrl) return alert("Ingresa enlace de TikTok.");
         urlMedia = obtenerUrlEmbedTikTok(rawUrl);
       }
 
-      const { error: dbError } = await supabaseClient.from('publicaciones').insert([
-        { titulo, tipo, url_media: urlMedia }
-      ]);
-
-      if (dbError) alert("Error guardando publicación: " + dbError.message);
-      else { alert("¡Publicación realizada con éxito!"); location.reload(); }
+      await supabaseClient.from('publicaciones').insert([{ titulo, tipo, url_media: urlMedia }]);
+      alert("¡Publicación realizada con éxito!");
+      location.reload();
     }
 
-    // Subir PDF de Resultados
     async function subirPDF() {
       const nombre = document.getElementById('pdf-nombre').value;
       const file = document.getElementById('pdf-archivo').files[0];
-
-      if (!nombre || !file) return alert("Completa el nombre y selecciona el archivo PDF.");
+      if (!nombre || !file) return alert("Completa el nombre y selecciona archivo.");
 
       const fileExt = file.name.split('.').pop();
       const nombreLimpio = limpiarNombreArchivo(file.name.replace('.' + fileExt, ''));
       const fileName = `${Date.now()}_${nombreLimpio}.${fileExt}`;
 
-      const { data, error } = await supabaseClient.storage.from('resultados-pdf').upload(fileName, file);
-
+      const { error } = await supabaseClient.storage.from('resultados-pdf').upload(fileName, file);
       if (error) return alert("Error al subir PDF: " + error.message);
 
       const urlPdf = `${SUPABASE_URL}/storage/v1/object/public/resultados-pdf/${fileName}`;
-
-      const { error: dbError } = await supabaseClient.from('resultados_pdf').insert([
-        { nombre_torneo: nombre, url_pdf: urlPdf }
-      ]);
-
-      if (dbError) alert("Error guardando registro: " + dbError.message);
-      else { alert("¡PDF subido exitosamente!"); location.reload(); }
+      await supabaseClient.from('resultados_pdf').insert([{ nombre_torneo: nombre, url_pdf: urlPdf }]);
+      alert("¡PDF subido exitosamente!");
+      location.reload();
     }
 
-    // Cargar publicaciones en el Muro
     async function cargarPublicaciones() {
-      const { data: posts, error } = await supabaseClient
-        .from('publicaciones')
-        .select('*')
-        .order('fecha_creacion', { ascending: false });
-
+      const { data: posts } = await supabaseClient.from('publicaciones').select('*').order('fecha_creacion', { ascending: false });
       const contenedor = document.getElementById('muro-posts-dinamicos');
-      if (error || !posts || posts.length === 0) {
-        contenedor.innerHTML = '<p>No hay publicaciones recientes.</p>';
-        return;
-      }
+      if (!posts || posts.length === 0) { contenedor.innerHTML = '<p>No hay publicaciones recientes.</p>'; return; }
 
       contenedor.innerHTML = posts.map(post => {
-        let contenidoMedia = '';
-        if (post.tipo === 'imagen') {
-          contenidoMedia = `<img src="${post.url_media}" alt="${post.titulo}" class="img-post">`;
-        } else if (post.tipo === 'tiktok') {
-          const embedUrl = obtenerUrlEmbedTikTok(post.url_media);
-          contenidoMedia = `<iframe src="${embedUrl}" allow="fullscreen" frameborder="0" style="width: 100%; height: 580px; border-radius: 8px;"></iframe>`;
-        }
+        let media = (post.tipo === 'imagen') 
+          ? `<img src="${post.url_media}" alt="${post.titulo}" class="img-post">`
+          : `<iframe src="${obtenerUrlEmbedTikTok(post.url_media)}" allow="fullscreen" frameborder="0" style="width: 100%; height: 580px; border-radius: 8px;"></iframe>`;
 
         return `
           <article class="tarjeta-post">
@@ -354,68 +632,35 @@
                 <span class="post-fecha">${new Date(post.fecha_creacion).toLocaleDateString()}</span>
               </div>
             </div>
-            <div class="post-body">
-              ${contenidoMedia}
-            </div>
+            <div class="post-body">${media}</div>
           </article>
         `;
       }).join('');
     }
 
-    // Cargar lista de gestión en el Panel Admin
     async function cargarGestionPublicaciones() {
-      const { data: posts, error } = await supabaseClient
-        .from('publicaciones')
-        .select('*')
-        .order('fecha_creacion', { ascending: false });
-
+      const { data: posts } = await supabaseClient.from('publicaciones').select('*').order('fecha_creacion', { ascending: false });
       const contenedor = document.getElementById('lista-admin-publicaciones');
-      if (error || !posts || posts.length === 0) {
-        contenedor.innerHTML = '<p style="font-size: 0.85rem; color: #666;">No hay publicaciones para eliminar.</p>';
-        return;
-      }
+      if (!posts || posts.length === 0) { contenedor.innerHTML = '<p style="font-size: 0.85rem; color: #666;">No hay publicaciones.</p>'; return; }
 
       contenedor.innerHTML = posts.map(post => `
         <div style="display: flex; justify-content: space-between; align-items: center; background: #f0f4f8; padding: 8px 12px; margin-bottom: 8px; border-radius: 6px;">
-          <span style="font-size: 0.85rem; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px;">
-            ${post.titulo} (${post.tipo})
-          </span>
-          <button onclick="eliminarPublicacion(${post.id})" style="background: #e63946; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">
-            🗑️ Eliminar
-          </button>
+          <span style="font-size: 0.85rem; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px;">${post.titulo}</span>
+          <button onclick="eliminarPublicacion(${post.id})" style="background: #e63946; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">🗑️ Eliminar</button>
         </div>
       `).join('');
     }
 
-    // Eliminar una publicación por ID
     async function eliminarPublicacion(id) {
-      if (!confirm("¿Estás seguro de que deseas eliminar esta publicación?")) return;
-
-      const { error } = await supabaseClient
-        .from('publicaciones')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        alert("Error al eliminar la publicación: " + error.message);
-      } else {
-        alert("Publicación eliminada correctamente.");
-        location.reload();
-      }
+      if (!confirm("¿Eliminar publicación?")) return;
+      await supabaseClient.from('publicaciones').delete().eq('id', id);
+      location.reload();
     }
 
-    // Cargar PDFs de resultados anteriores
     async function cargarResultadosPDF() {
-      const { data: pdfs, error } = await supabaseClient
-        .from('resultados_pdf')
-        .select('*')
-        .order('fecha_creacion', { ascending: false });
-
+      const { data: pdfs } = await supabaseClient.from('resultados_pdf').select('*').order('fecha_creacion', { ascending: false });
       const lista = document.getElementById('lista-pdf-resultados');
-      if (error || !pdfs || pdfs.length === 0) {
-        lista.innerHTML = '<li>No hay resultados registrados.</li>';
-        return;
-      }
+      if (!pdfs || pdfs.length === 0) { lista.innerHTML = '<li>No hay resultados registrados.</li>'; return; }
 
       lista.innerHTML = pdfs.map(pdf => `
         <li style="margin-bottom: 8px;">
@@ -424,26 +669,21 @@
       `).join('');
     }
 
-    // Cargar datos al iniciar
     window.addEventListener('DOMContentLoaded', () => {
       cargarPublicaciones();
       cargarResultadosPDF();
+      cargarTorneoActivo();
     });
 
-    // Envío de WhatsApp
     document.getElementById('form-whatsapp').addEventListener('submit', function(e) {
       e.preventDefault();
-      const numeroTelefono = "51959316166"; 
-      const nombre = document.getElementById('nombre').value;
-      const asunto = document.getElementById('asunto').value;
-      const mensaje = document.getElementById('mensaje').value;
+      const num = "51959316166"; 
+      const nom = document.getElementById('nombre').value;
+      const asu = document.getElementById('asunto').value;
+      const men = document.getElementById('mensaje').value;
 
-      const textoMensaje = `*CONSULTA - NATACIÓN AREQUIPA*%0A%0A` +
-                           `*Nombre / Club:* ${encodeURIComponent(nombre)}%0A` +
-                           `*Asunto:* ${encodeURIComponent(asunto)}%0A` +
-                           `*Mensaje:* ${encodeURIComponent(mensaje)}`;
-
-      window.open(`https://wa.me/${numeroTelefono}?text=${textoMensaje}`, '_blank');
+      const txt = `*CONSULTA - NATACIÓN AREQUIPA*%0A%0A*Nombre / Club:* ${encodeURIComponent(nom)}%0A*Asunto:* ${encodeURIComponent(asu)}%0A*Mensaje:* ${encodeURIComponent(men)}`;
+      window.open(`https://wa.me/${num}?text=${txt}`, '_blank');
     });
   </script>
 </body>
