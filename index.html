@@ -351,7 +351,7 @@
       return (match && match[1]) ? `https://www.tiktok.com/embed/v2/${match[1]}` : urlOriginal;
     }
 
-    // --- LÓGICA DE INSCRIPCIONES Y PROCESAMIENTO HY-TEK CON SOPORTE ZIP --- //
+    // --- LÓGICA DE INSCRIPCIONES Y PROCESAMIENTO HY-TEK AMPLIO --- //
 
     async function procesarArchivoPruebasMeetManager(file, torneoId, reemplazar = false) {
       return new Promise(async (resolve, reject) => {
@@ -373,12 +373,12 @@
             if (archivoObjetivo) {
               contenidoTexto = await archivoObjetivo.async("string");
             } else {
-              alert("No se encontró ningún archivo .HYV o .EV3 dentro del archivo ZIP.");
+              alert("No se encontró archivo de pruebas en el ZIP.");
               resolve();
               return;
             }
           } catch (err) {
-            alert("Error al descomprimir archivo ZIP: " + err.message);
+            alert("Error al descomprimir ZIP: " + err.message);
             resolve();
             return;
           }
@@ -396,9 +396,8 @@
 
         lineas.forEach(linea => {
           const l = linea.trim();
-          if (!l) return;
-
-          if (l.startsWith('D1') || l.startsWith('E1') || l.startsWith('EV') || l.includes('Mtr') || l.includes('Free') || l.includes('Libre') || l.includes('Fly') || l.includes('Back') || l.includes('Breast')) {
+          // Procesa cualquier línea con contenido que no sea un encabezado genérico de archivo
+          if (l.length > 5 && !l.startsWith('A1') && !l.startsWith('B1') && !l.startsWith('C1')) {
             let numPrueba = contadorManual;
             const matchNum = l.match(/(\d+)/);
             if (matchNum && matchNum[1]) {
@@ -409,7 +408,7 @@
             if (l.includes(' F ') || l.includes('Damas') || l.includes('Female')) genero = 'F';
             else if (l.includes(' M ') || l.includes('Varones') || l.includes('Male')) genero = 'M';
 
-            let estilo = l.substring(0, 50).replace(/[^a-zA-Z0-9\s]/g, " ").trim();
+            let estilo = l.substring(0, 60).replace(/[^a-zA-Z0-9\s]/g, " ").trim();
             if (estilo.length < 3) estilo = `Prueba ${numPrueba}`;
 
             pruebasParaInsertar.push({
@@ -431,9 +430,9 @@
         if (pruebasParaInsertar.length > 0) {
           const { error } = await supabaseClient.from('pruebas_torneo').insert(pruebasParaInsertar);
           if (error) alert("Error guardando pruebas: " + error.message);
-          else alert(`¡Éxito! Se descomprimieron e importaron ${pruebasParaInsertar.length} pruebas directamente desde el archivo de Meet Manager.`);
+          else alert(`¡Éxito! Se procesaron e insertaron ${pruebasParaInsertar.length} pruebas correctamente.`);
         } else {
-          alert("Atención: El archivo se abrió correctamente pero no se detectaron registros de pruebas. Revisa la exportación en Meet Manager.");
+          alert("No se detectaron registros válidos en el archivo.");
         }
 
         resolve();
