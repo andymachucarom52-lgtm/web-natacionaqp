@@ -253,9 +253,15 @@
         <select id="select-nadador-club" class="input-admin" style="width: 100%; margin-top: 4px;" onchange="actualizarSeleccionPruebasNadador()">
           <option value="">-- Seleccionar Nadador --</option>
         </select>
-        <button onclick="toggleFormNuevoNadador()" style="background: #2a9d8f; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; margin-top: 6px; cursor: pointer;">
-          ➕ Registrar Nadador Nuevo en Padrón
-        </button>
+        
+        <div style="display: flex; gap: 8px; margin-top: 6px;">
+          <button onclick="toggleFormNuevoNadador()" style="background: #2a9d8f; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">
+            ➕ Registrar Nadador Nuevo
+          </button>
+          <button id="btn-editar-nadador-padron" onclick="abrirEdicionNadador()" style="display: none; background: #d97706; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; font-weight: bold;">
+            ✏️ Editar Nadador Seleccionado
+          </button>
+        </div>
       </div>
 
       <!-- Formulario Nuevo Nadador -->
@@ -275,6 +281,28 @@
           </select>
         </div>
         <button onclick="guardarNuevoNadador()" class="btn-primario" style="font-size: 0.8rem; width: 100%; margin-top: 6px;">Guardar Atleta en Padrón</button>
+      </div>
+
+      <!-- Formulario Editar Nadador Existente -->
+      <div id="form-editar-nadador" style="display: none; background: #fffbe3; padding: 10px; border: 1px solid #fde047; border-radius: 6px; margin: 10px 0;">
+        <h5 style="margin: 0 0 6px 0; color: #b45309;">✏️ Editar Datos del Atleta</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <input type="text" id="edit-nad-nombres" placeholder="Nombres completos" class="input-admin">
+          <input type="text" id="edit-nad-apellidos" placeholder="Apellidos completos" class="input-admin">
+          <input type="text" id="edit-nad-dni" placeholder="DNI / Carnet" class="input-admin">
+          <div>
+            <label style="font-size: 0.75rem;">Fecha de Nacimiento:</label>
+            <input type="date" id="edit-nad-fnac" class="input-admin">
+          </div>
+          <select id="edit-nad-genero" class="input-admin">
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <button onclick="guardarCambiosNadador()" class="btn-primario" style="background: #d97706; font-size: 0.8rem; flex: 1;">💾 Guardar Cambios</button>
+          <button onclick="cerrarEdicionNadador()" style="background: #64748b; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Cancelar</button>
+        </div>
       </div>
 
       <!-- Paso 2: Selección Múltiple de Pruebas -->
@@ -475,19 +503,16 @@
       };
 
       try {
-        // 1. Extraer Género (F F I = Damas, F M I = Varones)
         let genero = "";
         if (str.includes("F F I") || str.includes("Damas")) genero = "Damas";
         else if (str.includes("F M I") || str.includes("Varones")) genero = "Varones";
 
-        // 2. Extraer Rango de Edades (ej. "7 8", "9 10", "11 12", "13 14")
         let edatTxt = "";
         const matchEdad = str.match(/\b(\d{1,2})\s+(\d{1,2})\s+(\d{2,4})\b/);
         if (matchEdad) {
           edatTxt = `${matchEdad[1]}-${matchEdad[2]} años`;
         }
 
-        // 3. Extraer Distancia y Estilo (ej. "50 1 0" -> 50m Libre)
         let estiloTxt = "";
         Object.keys(mapaEstilos).forEach(cod => {
           const reg = new RegExp(`(\\d{2,4})\\s+${cod}`, 'i');
@@ -504,7 +529,6 @@
         console.warn("Error parseando prueba:", e);
       }
 
-      // Si falla, devuelve la cadena filtrando prefijos
       return str.replace(/^\d+\s+/i, '').replace(/\(X\)/i, '').trim();
     }
 
@@ -868,6 +892,7 @@
 
     function toggleFormNuevoNadador() {
       const f = document.getElementById('form-nuevo-nadador');
+      cerrarEdicionNadador();
       f.style.display = (f.style.display === 'none') ? 'block' : 'none';
     }
 
@@ -894,6 +919,71 @@
       }
     }
 
+    // --- EDICIÓN DE NADADOR REGISTRADO --- //
+
+    async function abrirEdicionNadador() {
+      const nadadorId = document.getElementById('select-nadador-club').value;
+      if (!nadadorId) return alert("Selecciona un nadador para editar.");
+
+      const { data: nadador, error } = await supabaseClient
+        .from('nadadores')
+        .select('*')
+        .eq('id', nadadorId)
+        .single();
+
+      if (error || !nadador) return alert("Error obteniendo los datos del nadador.");
+
+      document.getElementById('edit-nad-nombres').value = nadador.nombres || '';
+      document.getElementById('edit-nad-apellidos').value = nadador.apellidos || '';
+      document.getElementById('edit-nad-dni').value = nadador.dni_carnet || '';
+      document.getElementById('edit-nad-fnac').value = nadador.fecha_nacimiento || '';
+      document.getElementById('edit-nad-genero').value = nadador.genero || 'M';
+
+      document.getElementById('form-nuevo-nadador').style.display = 'none';
+      document.getElementById('form-editar-nadador').style.display = 'block';
+    }
+
+    function cerrarEdicionNadador() {
+      document.getElementById('form-editar-nadador').style.display = 'none';
+    }
+
+    async function guardarCambiosNadador() {
+      const nadadorId = document.getElementById('select-nadador-club').value;
+      if (!nadadorId) return alert("No hay ningún nadador seleccionado.");
+
+      const nombres = document.getElementById('edit-nad-nombres').value.trim();
+      const apellidos = document.getElementById('edit-nad-apellidos').value.trim();
+      const dni = document.getElementById('edit-nad-dni').value.trim();
+      const fnac = document.getElementById('edit-nad-fnac').value;
+      const genero = document.getElementById('edit-nad-genero').value;
+
+      if (!nombres || !apellidos || !fnac) {
+        return alert("Por favor completa los nombres, apellidos y fecha de nacimiento.");
+      }
+
+      const { error } = await supabaseClient
+        .from('nadadores')
+        .update({
+          nombres: nombres,
+          apellidos: apellidos,
+          dni_carnet: dni,
+          fecha_nacimiento: fnac,
+          genero: genero
+        })
+        .eq('id', nadadorId);
+
+      if (error) {
+        alert("Error actualizando atleta: " + error.message);
+      } else {
+        alert("¡Datos del atleta actualizados con éxito!");
+        cerrarEdicionNadador();
+        await cargarNadadoresClub(clubSeleccionadoId);
+        document.getElementById('select-nadador-club').value = nadadorId;
+        actualizarSeleccionPruebasNadador();
+        cargarResumenInscritos();
+      }
+    }
+
     async function cargarPruebasTorneo(torneoId) {
       const { data: pruebas } = await supabaseClient
         .from('pruebas_torneo')
@@ -908,11 +998,17 @@
     async function actualizarSeleccionPruebasNadador() {
       const nadadorId = document.getElementById('select-nadador-club').value;
       const cont = document.getElementById('contenedor-pruebas-multiple');
+      const btnEditar = document.getElementById('btn-editar-nadador-padron');
 
       if (!nadadorId) {
         cont.innerHTML = "<em>Selecciona un nadador para habilitar las pruebas...</em>";
+        if (btnEditar) btnEditar.style.display = 'none';
+        cerrarEdicionNadador();
         return;
       }
+
+      // Mostrar botón de edición si hay nadador seleccionado
+      if (btnEditar) btnEditar.style.display = 'inline-block';
 
       // 1. Obtener los datos del nadador seleccionado
       const { data: nadador } = await supabaseClient
