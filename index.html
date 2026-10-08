@@ -310,6 +310,26 @@
           📊 Descargar Resumen en Excel / CSV
         </button>
 
+        <!-- SECCIÓN NUEVA: GESTIÓN Y BORRADO DE INSCRIPCIONES -->
+        <hr style="margin: 15px 0;">
+        <h4 style="color: #d97706;">🗑️ 8. Administrar / Borrar Inscripciones</h4>
+        <label style="font-size: 0.8rem; font-weight: bold;">Selecciona Torneo:</label>
+        <select id="select-torneo-borrar-inscripciones" class="input-admin" onchange="cargarInscripcionesParaGestionarAdmin()" style="width: 100%; margin-bottom: 8px;">
+          <option value="">-- Selecciona Torneo --</option>
+        </select>
+
+        <div id="contenedor-gestion-inscripciones" style="background: #fffbe3; padding: 10px; border: 1px solid #fde047; border-radius: 6px; margin-bottom: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; font-weight: bold;">Listado de Inscritos:</span>
+            <button onclick="vaciarTodasInscripcionesTorneo()" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold;">
+              🔥 Borrar TODAS las inscripciones de este torneo
+            </button>
+          </div>
+          <div id="lista-inscripciones-admin" style="font-size: 0.8rem; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e5e7eb; padding: 6px; border-radius: 4px;">
+            Selecciona un torneo para ver las inscripciones.
+          </div>
+        </div>
+
         <hr style="margin: 15px 0;">
         <h4 style="color: #003845;">7. Administrar Publicaciones</h4>
         <div id="lista-admin-publicaciones">
@@ -559,16 +579,27 @@
       }
     }
 
-    // --- EDICIÓN DE TORNEOS --- //
+    // --- EDICIÓN Y GESTIÓN DE TORNEOS --- //
 
     async function cargarListaTorneosParaEditar() {
       const { data: torneos } = await supabaseClient.from('torneos').select('*').order('id', { ascending: false });
       listaTorneosGlobal = torneos || [];
-      const select = document.getElementById('select-torneo-editar');
       
+      const selectEdit = document.getElementById('select-torneo-editar');
+      const selectBorrar = document.getElementById('select-torneo-borrar-inscripciones');
+
       if (listaTorneosGlobal.length > 0) {
-        select.innerHTML = '<option value="">-- Selecciona un torneo --</option>' + 
+        const opcionesHtml = '<option value="">-- Selecciona un torneo --</option>' + 
           listaTorneosGlobal.map(t => `<option value="${t.id}">${t.nombre_torneo} (${t.fecha_inicio})</option>`).join('');
+
+        selectEdit.innerHTML = opcionesHtml;
+        selectBorrar.innerHTML = opcionesHtml;
+
+        // Autoseleccionar torneo activo en la sección de borrado
+        if (torneoActivoObj) {
+          selectBorrar.value = torneoActivoObj.id;
+          cargarInscripcionesParaGestionarAdmin();
+        }
       }
     }
 
@@ -621,6 +652,81 @@
       location.reload();
     }
 
+    // --- NUEVAS FUNCIONES: MÓDULO PARA ELIMINAR INSCRIPCIONES --- //
+
+    async function cargarInscripcionesParaGestionarAdmin() {
+      const torneoId = document.getElementById('select-torneo-borrar-inscripciones').value;
+      const cont = document.getElementById('lista-inscripciones-admin');
+
+      if (!torneoId) {
+        cont.innerHTML = "Selecciona un torneo para ver las inscripciones.";
+        return;
+      }
+
+      const { data: inscripciones, error } = await supabaseClient
+        .from('inscripciones')
+        .select('*, nadadores(*, clubes(*)), pruebas_torneo(*)')
+        .eq('torneo_id', torneoId)
+        .order('id', { ascending: false });
+
+      if (error || !inscripciones || inscripciones.length === 0) {
+        cont.innerHTML = "No hay inscripciones registradas para este torneo.";
+        return;
+      }
+
+      cont.innerHTML = inscripciones.map(i => {
+        const clubNombre = i.nadadores && i.nadadores.clubes ? i.nadadores.clubes.nombre_club : 'Sin Club';
+        const atletaNombre = i.nadadores ? `${i.nadadores.apellidos}, ${i.nadadores.nombres}` : 'Desconocido';
+        const numPrueba = i.pruebas_torneo ? i.pruebas_torneo.numero_prueba : '?';
+
+        return `
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 4px 0;">
+            <div>
+              <strong>${atletaNombre}</strong> (${clubNombre})<br>
+              <small style="color: #666;">Prueba ${numPrueba} | Tiempo: ${i.tiempo_inscripcion}</small>
+            </div>
+            <button onclick="borrarInscripcionIndividual(${i.id})" style="background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 0.75rem;">
+              🗑️ Borrar
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function borrarInscripcionIndividual(idInscripcion) {
+      if (!confirm("¿Seguro que deseas borrar esta inscripción?")) return;
+
+      const { error } = await supabaseClient.from('inscripciones').delete().eq('id', idInscripcion);
+
+      if (error) {
+        alert("Error al borrar la inscripción: " + error.message);
+      } else {
+        alert("Inscripción borrada con éxito.");
+        cargarInscripcionesParaGestionarAdmin();
+        if (clubSeleccionadoId) cargarResumenInscritos();
+      }
+    }
+
+    async function vaciarTodasInscripcionesTorneo() {
+      const torneoId = document.getElementById('select-torneo-borrar-inscripciones').value;
+      if (!torneoId) return alert("Selecciona un torneo primero.");
+
+      const confirmacion = confirm("⚠️ ATENCIÓN: Se eliminarán TODAS las inscripciones de este torneo. ¿Estás seguro?");
+      if (!confirmacion) return;
+
+      const { error } = await supabaseClient.from('inscripciones').delete().eq('torneo_id', torneoId);
+
+      if (error) {
+        alert("Error al vaciar inscripciones: " + error.message);
+      } else {
+        alert("Todas las inscripciones de este torneo han sido borradas. El torneo quedó limpio para un nuevo evento o pruebas.");
+        cargarInscripcionesParaGestionarAdmin();
+        if (clubSeleccionadoId) cargarResumenInscritos();
+      }
+    }
+
+    // --- CARGAS PRINCIPALES --- //
+
     async function cargarTorneoActivo() {
       const { data: torneos, error } = await supabaseClient
         .from('torneos')
@@ -672,7 +778,6 @@
       f.style.display = (f.style.display === 'none') ? 'block' : 'none';
     }
 
-    // REGISTRO DE NADADOR EN PADRÓN PERMANENTE DE SUPABASE
     async function guardarNuevoNadador() {
       const nombres = document.getElementById('nad-nombres').value;
       const apellidos = document.getElementById('nad-apellidos').value;
@@ -777,7 +882,6 @@
       // Registro A1 - Encabezado HY3
       lineasHY3.push("A102Hy-Tek Entry File" + " ".repeat(100));
 
-      // Mapa de clubes y nadadores para estructurar el archivo
       const mapaClubes = {};
 
       inscripciones.forEach(i => {
@@ -808,12 +912,10 @@
         });
       });
 
-      // Generar estructuras C1, D1 y E1
       Object.values(mapaClubes).forEach(cObj => {
         const clubNombre = (cObj.info.nombre_club || "CLUB").padEnd(30, ' ').substring(0, 30);
         const clubCodigo = (cObj.info.nombre_club || "CLB").substring(0, 4).toUpperCase().padEnd(4, ' ');
         
-        // Registro C1 - Datos del Club
         lineasHY3.push(`C101${clubCodigo}${clubNombre}`);
 
         Object.values(cObj.nadadores).forEach(nObj => {
@@ -822,14 +924,12 @@
           const genero = nObj.info.genero || "M";
           const fnac = (nObj.info.fecha_nacimiento || "2010-01-01").replace(/-/g, '');
 
-          // Registro D1 - Atleta
           lineasHY3.push(`D101${apellidos}${nombres}${genero}${fnac}`);
 
           nObj.pruebas.forEach(p => {
             const numPrueba = String(p.numPrueba).padStart(3, '0');
             const tiempoLimpio = p.tiempo === 'NT' ? '      NT' : p.tiempo.padStart(8, ' ');
             
-            // Registro E1 - Inscripción a Prueba
             lineasHY3.push(`E101${numPrueba}${tiempoLimpio}`);
           });
         });
@@ -837,7 +937,6 @@
 
       const contenidoFinalHY3 = lineasHY3.join("\r\n");
 
-      // Descarga del archivo .HY3
       const blob = new Blob([contenidoFinalHY3], { type: 'text/plain;charset=utf-8' });
       const link = document.createElement("a");
       const nombreLimpioTorneo = torneoActivoObj.nombre_torneo.replace(/[^a-zA-Z0-9]/g, '_');
