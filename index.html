@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- Etiquetas SEO para posicionamiento en buscadores -->
   <title>Natación Arequipa - Portal Oficial de Competencias y Resultados</title>
   <meta name="description" content="Portal oficial de Natación Arequipa. Consulta resultados de torneos en PDF, calendario de competencias, inscripciones en vivo y novedades del circuito acuático.">
   <meta name="keywords" content="Natación Arequipa, competencias de natación, resultados natación Arequipa, jueceo natación Perú, calendario acuático, reglamento World Aquatics">
@@ -18,7 +17,7 @@
   
   <!-- SDK de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- JSZip para lectura directa de archivos ZIP de HY-TEK / Meet Manager -->
+  <!-- JSZip para lectura y exportación ZIP -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
@@ -34,7 +33,7 @@
     </ul>
   </nav>
 
-  <!-- Encabezado con Franja Horizontal Azul Agua de Piscina -->
+  <!-- Encabezado -->
   <header class="encabezado-piscina">
     <div class="linea-piscina">
       <img src="logo.png" alt="Logo Natación Arequipa" class="logo-izq">
@@ -45,7 +44,7 @@
   <!-- ESTRUCTURA PRINCIPAL DE 3 COLUMNAS -->
   <div class="layout-tres-columnas">
 
-    <!-- COLUMNA IZQUIERDA: Accesos Directos a Secciones -->
+    <!-- COLUMNA IZQUIERDA -->
     <aside class="columna-izquierda">
       <h2 class="titulo-columna">📌 Menú de Secciones</h2>
 
@@ -72,12 +71,16 @@
             <p id="lbl-cierre-torneo" style="font-size: 0.8rem; color: #0c4a6e; margin: 5px 0 0 0;"></p>
           </div>
 
-          <!-- Selección de Club -->
+          <!-- Selección y Autenticación de Club / Colegio -->
           <div id="seccion-login-club">
-            <label style="font-size: 0.85rem; font-weight: bold;">Selecciona tu Club:</label>
+            <label style="font-size: 0.85rem; font-weight: bold;">Selecciona tu Club / Colegio:</label>
             <select id="select-club" class="input-admin" style="width: 100%; margin: 6px 0;">
-              <option value="">-- Cargar Clubes --</option>
+              <option value="">-- Cargar Instituciones --</option>
             </select>
+
+            <label style="font-size: 0.85rem; font-weight: bold; margin-top: 4px; display: block;">Clave de Institución:</label>
+            <input type="password" id="clave-club-input" placeholder="Clave asignada" class="input-admin" style="width: 100%; margin-bottom: 6px;">
+
             <button onclick="ingresarClub()" class="btn-primario" style="width: 100%;">Ingresar a Inscribir</button>
           </div>
 
@@ -86,46 +89,48 @@
             <hr>
             <h4 id="titulo-club-sesion" style="color: #005f73; margin-bottom: 8px;">Club: </h4>
             
-            <!-- Paso 1: Nadador -->
+            <!-- Paso 1: Nadador del padrón -->
             <div style="margin-bottom: 10px;">
-              <label style="font-size: 0.85rem; font-weight: bold;">1. Selecciona Nadador:</label>
-              <select id="select-nadador-club" class="input-admin" style="width: 100%; margin-top: 4px;">
-                <option value="">-- Seleccionar --</option>
+              <label style="font-size: 0.85rem; font-weight: bold;">1. Selecciona Nadador (Padrón Permanente):</label>
+              <select id="select-nadador-club" class="input-admin" style="width: 100%; margin-top: 4px;" onchange="buscarTiempoAcreditadoNadador()">
+                <option value="">-- Seleccionar Nadador --</option>
               </select>
               <button onclick="toggleFormNuevoNadador()" style="background: #2a9d8f; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; margin-top: 6px; cursor: pointer; width: 100%;">
-                ➕ Registrar Nadador No Listado
+                ➕ Registrar Nadador Nuevo en Padrón
               </button>
             </div>
 
             <!-- Formulario Nuevo Nadador -->
             <div id="form-nuevo-nadador" style="display: none; background: #f8fafc; padding: 10px; border: 1px dashed #0077b6; border-radius: 6px; margin-bottom: 10px;">
-              <h5 style="margin: 0 0 6px 0; color: #0077b6;">Nuevo Nadador</h5>
-              <input type="text" id="nad-nombres" placeholder="Nombres" class="input-admin">
-              <input type="text" id="nad-apellidos" placeholder="Apellidos" class="input-admin">
-              <input type="text" id="nad-dni" placeholder="DNI / Carnet" class="input-admin">
-              <label style="font-size: 0.75rem;">Fecha Nacimiento:</label>
+              <h5 style="margin: 0 0 6px 0; color: #0077b6;">Crear Nuevo Atleta (Guardado en Padrón)</h5>
+              <input type="text" id="nad-nombres" placeholder="Nombres completas" class="input-admin">
+              <input type="text" id="nad-apellidos" placeholder="Apellidos completos" class="input-admin">
+              <input type="text" id="nad-dni" placeholder="DNI / Carnet de Identidad" class="input-admin">
+              <label style="font-size: 0.75rem;">Fecha de Nacimiento:</label>
               <input type="date" id="nad-fnac" class="input-admin">
               <select id="nad-genero" class="input-admin">
                 <option value="M">Masculino</option>
                 <option value="F">Femenino</option>
               </select>
-              <button onclick="guardarNuevoNadador()" class="btn-primario" style="font-size: 0.8rem; width: 100%;">Guardar Nadador</button>
+              <button onclick="guardarNuevoNadador()" class="btn-primario" style="font-size: 0.8rem; width: 100%;">Guardar Atleta e Inscribir</button>
             </div>
 
             <!-- Paso 2: Pruebas -->
             <div style="margin-bottom: 10px;">
               <label style="font-size: 0.85rem; font-weight: bold;">2. Selecciona Prueba:</label>
-              <select id="select-prueba-torneo" class="input-admin" style="width: 100%; margin-top: 4px;">
+              <select id="select-prueba-torneo" class="input-admin" style="width: 100%; margin-top: 4px;" onchange="buscarTiempoAcreditadoNadador()">
                 <option value="">-- Seleccionar Prueba --</option>
               </select>
-              <input type="text" id="tiempo-inscripcion" placeholder="Tiempo (ej. 00:32.50 o NT)" class="input-admin" value="NT" style="margin-top: 4px;">
+
+              <label style="font-size: 0.75rem; font-weight: bold; margin-top: 6px; display: block; color: #0369a1;">Tiempo Acreditado (Cálculo Automático / NT):</label>
+              <input type="text" id="tiempo-inscripcion" class="input-admin" value="NT" readonly style="background-color: #e2e8f0; font-weight: bold; color: #0f172a; cursor: not-allowed;">
             </div>
 
             <button id="btn-confirmar-inscripcion" onclick="registrarInscripcionFinal()" class="btn-primario" style="width: 100%;">📥 Guardar Inscripción</button>
 
-            <!-- Lista de Inscritos -->
-            <h5 style="margin-top: 15px; color: #003845;">Planilla del Club para este torneo:</h5>
-            <div id="lista-resumen-inscritos" style="font-size: 0.8rem; max-height: 150px; overflow-y: auto; background: #fff; border: 1px solid #ddd; padding: 5px; border-radius: 4px;">
+            <!-- Lista de Inscritos del Club -->
+            <h5 style="margin-top: 15px; color: #003845;">Inscritos de esta institución para este torneo:</h5>
+            <div id="lista-resumen-inscritos" style="font-size: 0.8rem; max-height: 160px; overflow-y: auto; background: #fff; border: 1px solid #ddd; padding: 5px; border-radius: 4px;">
               Sin inscripciones aún.
             </div>
           </div>
@@ -148,7 +153,7 @@
         <div class="acordeon-contenido">
           <form id="form-whatsapp">
             <label for="nombre">Nombre / Club:</label>
-            <input type="text" id="nombre" required placeholder="Ej. Club Acuático">
+            <input type="text" id="nombre" required placeholder="Ej. Club Acuático / Colegio">
 
             <label for="asunto">Asunto:</label>
             <select id="asunto" required>
@@ -167,7 +172,7 @@
       </details>
     </aside>
 
-    <!-- COLUMNA CENTRAL: Muro Dinámico -->
+    <!-- COLUMNA CENTRAL -->
     <main class="columna-centro">
       <div class="muro-publicacion">
         <h2>📣 Novedades y Destacados</h2>
@@ -179,11 +184,10 @@
       </div>
     </main>
 
-    <!-- COLUMNA DERECHA: Widgets -->
+    <!-- COLUMNA DERECHA -->
     <aside class="columna-derecha">
       <h2 class="titulo-columna">⚡ Accesos Rápidos</h2>
 
-      <!-- Widget AquaSplashMobile -->
       <div id="vivo" class="tarjeta-derecha">
         <h3>Competencias en tiempo real</h3>
         <p style="font-size: 0.85rem; color: #555; margin-bottom: 10px;">Sigue las marcas en vivo desde la app oficial:</p>
@@ -192,7 +196,6 @@
         </a>
       </div>
 
-      <!-- WIDGET: Reglamento World Aquatics -->
       <div class="tarjeta-derecha" style="margin-top: 15px;">
         <h3>📖 Reglamento World Aquatics</h3>
         <p style="font-size: 0.85rem; color: #555; margin-bottom: 8px;">Reglamento oficial traducido al español:</p>
@@ -249,7 +252,7 @@
         <label style="font-size: 0.8rem;">Cierre de Inscripciones:</label>
         <input type="datetime-local" id="torneo-cierre" class="input-admin">
         
-        <label style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; display: block;">Archivo de Pruebas (.ZIP / .HYV / .EV3 / .TXT) de Meet Manager:</label>
+        <label style="font-size: 0.8rem; font-weight: bold; margin-top: 5px; display: block;">Archivo de Pruebas (.ZIP / .HYV / .EV3 / .TXT):</label>
         <input type="file" id="archivo-hyv-input" accept=".zip,.hyv,.ev3,.txt" class="input-admin" required>
         
         <button onclick="crearNuevoTorneo()" class="btn-primario">Crear Torneo y Cargar Pruebas</button>
@@ -268,14 +271,21 @@
           <label style="font-size: 0.8rem;">Cierre de Inscripciones:</label>
           <input type="datetime-local" id="edit-torneo-cierre" class="input-admin">
 
-          <label style="font-size: 0.8rem; font-weight: bold; margin-top: 8px; display: block; color: #15803d;">Actualizar / Reemplazar Pruebas (.ZIP / .HYV / .EV3 / .TXT):</label>
+          <label style="font-size: 0.8rem; font-weight: bold; margin-top: 8px; display: block; color: #15803d;">Actualizar Pruebas (.ZIP / .HYV / .EV3 / .TXT):</label>
           <input type="file" id="edit-archivo-hyv-input" accept=".zip,.hyv,.ev3,.txt" class="input-admin">
 
-          <button onclick="guardarCambiosTorneo()" class="btn-primario" style="background: #16a34a; margin-top: 8px;">💾 Guardar Cambios de Torneo y Pruebas</button>
+          <button onclick="guardarCambiosTorneo()" class="btn-primario" style="background: #16a34a; margin-top: 8px;">💾 Guardar Cambios</button>
         </div>
 
         <hr style="margin: 15px 0;">
-        <h4 style="color: #003845;">3. Publicar en Muro Central</h4>
+        <h4 style="color: #003845;">3. Registrar Nuevo Club / Colegio / Máster</h4>
+        <input type="text" id="nuevo-club-nombre" placeholder="Nombre de Institución / Colegio" class="input-admin">
+        <input type="text" id="nuevo-club-delegado" placeholder="Nombre del Delegado" class="input-admin">
+        <input type="password" id="nuevo-club-clave" placeholder="Asignar Clave de Acceso (Ej. 1234)" class="input-admin">
+        <button onclick="crearNuevoClub()" class="btn-primario" style="background: #0284c7;">➕ Registrar Club / Colegio</button>
+
+        <hr style="margin: 15px 0;">
+        <h4 style="color: #003845;">4. Publicar en Muro Central</h4>
         <input type="text" id="post-titulo" placeholder="Título de la publicación" class="input-admin">
         <select id="post-tipo" onchange="cambiarTipoMedia()" class="input-admin">
           <option value="imagen">Imagen / Afiche (Archivo)</option>
@@ -286,19 +296,22 @@
         <button onclick="subirPublicacion()" class="btn-primario">Publicar en Muro</button>
 
         <hr style="margin: 15px 0;">
-        <h4 style="color: #003845;">4. Subir PDF de Resultados</h4>
+        <h4 style="color: #003845;">5. Subir PDF de Resultados</h4>
         <input type="text" id="pdf-nombre" placeholder="Nombre de la competencia" class="input-admin">
         <input type="file" id="pdf-archivo" accept="application/pdf" class="input-admin">
         <button onclick="subirPDF()" class="btn-primario">Subir Resultados PDF</button>
 
         <hr style="margin: 15px 0;">
-        <h4 style="color: #003845;">5. Exportar Inscripciones (Para HY-TEK)</h4>
-        <button onclick="exportarInscripcionesHYTEK()" style="background: #2a9d8f; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer;">
-          📊 Descargar Planilla de Inscripciones (CSV)
+        <h4 style="color: #003845;">6. Exportar Inscripciones para Meet Manager 7.0</h4>
+        <button onclick="exportarInscripcionesHY3()" style="background: #2a9d8f; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; margin-bottom: 6px;">
+          📦 Exportar Archivo Directo (.HY3) para Meet Manager
+        </button>
+        <button onclick="exportarInscripcionesCSV()" style="background: #0077b6; color: white; padding: 8px; border: none; border-radius: 6px; font-size: 0.85rem; width: 100%; cursor: pointer;">
+          📊 Descargar Resumen en Excel / CSV
         </button>
 
         <hr style="margin: 15px 0;">
-        <h4 style="color: #003845;">6. Administrar Publicaciones</h4>
+        <h4 style="color: #003845;">7. Administrar Publicaciones</h4>
         <div id="lista-admin-publicaciones">
           <p style="font-size: 0.85rem; color: #666;">Cargando lista...</p>
         </div>
@@ -318,6 +331,7 @@
     const CLAVE_CORRECTA = "Arequipa2026*"; 
     let torneoActivoObj = null;
     let clubSeleccionadoId = null;
+    let clubObjetoSesion = null;
     let listaTorneosGlobal = [];
 
     function abrirAdmin() { document.getElementById('modal-admin').style.display = 'flex'; }
@@ -351,7 +365,90 @@
       return (match && match[1]) ? `https://www.tiktok.com/embed/v2/${match[1]}` : urlOriginal;
     }
 
-    // --- LÓGICA DE INSCRIPCIONES Y PROCESAMIENTO HY-TEK AMPLIO --- //
+    // --- AUTENTICACIÓN Y GESTIÓN DE CLUBES --- //
+
+    async function crearNuevoClub() {
+      const nombre = document.getElementById('nuevo-club-nombre').value;
+      const delegado = document.getElementById('nuevo-club-delegado').value;
+      const clave = document.getElementById('nuevo-club-clave').value || '1234';
+
+      if (!nombre) return alert("Ingresa el nombre del Club o Colegio.");
+
+      const { error } = await supabaseClient.from('clubes').insert([
+        { nombre_club: nombre, delegado_nombre: delegado, clave_acceso: clave }
+      ]);
+
+      if (error) alert("Error registrando club: " + error.message);
+      else {
+        alert(`¡Institución "${nombre}" registrada con éxito! Clave de acceso: ${clave}`);
+        document.getElementById('nuevo-club-nombre').value = '';
+        document.getElementById('nuevo-club-delegado').value = '';
+        document.getElementById('nuevo-club-clave').value = '';
+        cargarClubes();
+      }
+    }
+
+    async function cargarClubes() {
+      const { data: clubes } = await supabaseClient.from('clubes').select('*').order('nombre_club');
+      const select = document.getElementById('select-club');
+      if (clubes) {
+        select.innerHTML = '<option value="">-- Selecciona Club / Colegio --</option>' + 
+          clubes.map(c => `<option value="${c.id}">${c.nombre_club}</option>`).join('');
+      }
+    }
+
+    async function ingresarClub() {
+      const clubId = document.getElementById('select-club').value;
+      const claveInput = document.getElementById('clave-club-input').value.trim();
+
+      if (!clubId) return alert("Selecciona un club o colegio.");
+
+      const { data: club } = await supabaseClient.from('clubes').select('*').eq('id', clubId).single();
+
+      if (club) {
+        if (club.clave_acceso && club.clave_acceso !== claveInput) {
+          return alert("Clave de acceso incorrecta para este club/colegio.");
+        }
+
+        clubSeleccionadoId = clubId;
+        clubObjetoSesion = club;
+
+        document.getElementById('titulo-club-sesion').innerText = `Club / Colegio: ${club.nombre_club}`;
+        document.getElementById('panel-inscripcion-club').style.display = 'block';
+
+        cargarNadadoresClub(clubId);
+        cargarResumenInscritos();
+      }
+    }
+
+    // --- BÚSQUEDA AUTOMÁTICA DE TIEMPOS HISTÓRICOS --- //
+
+    async function buscarTiempoAcreditadoNadador() {
+      const nadadorId = document.getElementById('select-nadador-club').value;
+      const pruebaId = document.getElementById('select-prueba-torneo').value;
+      const inputTiempo = document.getElementById('tiempo-inscripcion');
+
+      if (!nadadorId || !pruebaId) {
+        inputTiempo.value = "NT";
+        return;
+      }
+
+      const { data: marcas } = await supabaseClient
+        .from('inscripciones')
+        .select('tiempo_inscripcion')
+        .eq('nadador_id', nadadorId)
+        .neq('tiempo_inscripcion', 'NT')
+        .order('id', { ascending: false })
+        .limit(1);
+
+      if (marcas && marcas.length > 0) {
+        inputTiempo.value = marcas[0].tiempo_inscripcion;
+      } else {
+        inputTiempo.value = "NT";
+      }
+    }
+
+    // --- PROCESAMIENTO ARCHIVO PRUEBAS MEET MANAGER --- //
 
     async function procesarArchivoPruebasMeetManager(file, torneoId, reemplazar = false) {
       return new Promise(async (resolve, reject) => {
@@ -396,7 +493,6 @@
 
         lineas.forEach(linea => {
           const l = linea.trim();
-          // Procesa cualquier línea con contenido que no sea un encabezado genérico de archivo
           if (l.length > 5 && !l.startsWith('A1') && !l.startsWith('B1') && !l.startsWith('C1')) {
             let numPrueba = contadorManual;
             const matchNum = l.match(/(\d+)/);
@@ -446,7 +542,7 @@
       const fileInput = document.getElementById('archivo-hyv-input');
 
       if (!nombre || !fecha || !cierre) return alert("Completa los datos del torneo.");
-      if (fileInput.files.length === 0) return alert("Selecciona el archivo de pruebas (.ZIP / .HYV / .EV3) exportado de Meet Manager.");
+      if (fileInput.files.length === 0) return alert("Selecciona el archivo de pruebas exportado de Meet Manager.");
 
       await supabaseClient.from('torneos').update({ activo: false }).neq('id', 0);
 
@@ -557,29 +653,6 @@
       cargarPruebasTorneo(torneoActivoObj.id);
     }
 
-    async function cargarClubes() {
-      const { data: clubes } = await supabaseClient.from('clubes').select('*').order('nombre_club');
-      const select = document.getElementById('select-club');
-      if (clubes) {
-        select.innerHTML = '<option value="">-- Selecciona Club --</option>' + 
-          clubes.map(c => `<option value="${c.id}">${c.nombre_club}</option>`).join('');
-      }
-    }
-
-    async function ingresarClub() {
-      const clubId = document.getElementById('select-club').value;
-      if (!clubId) return alert("Selecciona un club.");
-      
-      clubSeleccionadoId = clubId;
-      const clubNombre = document.getElementById('select-club').options[document.getElementById('select-club').selectedIndex].text;
-      
-      document.getElementById('titulo-club-sesion').innerText = `Club: ${clubNombre}`;
-      document.getElementById('panel-inscripcion-club').style.display = 'block';
-
-      cargarNadadoresClub(clubId);
-      cargarResumenInscritos();
-    }
-
     async function cargarNadadoresClub(clubId) {
       const { data: nadadores } = await supabaseClient
         .from('nadadores')
@@ -599,6 +672,7 @@
       f.style.display = (f.style.display === 'none') ? 'block' : 'none';
     }
 
+    // REGISTRO DE NADADOR EN PADRÓN PERMANENTE DE SUPABASE
     async function guardarNuevoNadador() {
       const nombres = document.getElementById('nad-nombres').value;
       const apellidos = document.getElementById('nad-apellidos').value;
@@ -606,17 +680,19 @@
       const fnac = document.getElementById('nad-fnac').value;
       const genero = document.getElementById('nad-genero').value;
 
-      if (!nombres || !apellidos || !fnac) return alert("Completa los datos del nadador.");
+      if (!nombres || !apellidos || !fnac) return alert("Completa los datos del nuevo nadador.");
 
-      const { error } = await supabaseClient.from('nadadores').insert([
+      const { data, error } = await supabaseClient.from('nadadores').insert([
         { club_id: clubSeleccionadoId, nombres, apellidos, dni_carnet: dni, fecha_nacimiento: fnac, genero }
-      ]);
+      ]).select();
 
       if (error) alert("Error guardando nadador: " + error.message);
       else {
-        alert("Nadador registrado con éxito.");
+        alert("Atleta guardado exitosamente en el padrón permanente.");
         toggleFormNuevoNadador();
-        cargarNadadoresClub(clubSeleccionadoId);
+        await cargarNadadoresClub(clubSeleccionadoId);
+        document.getElementById('select-nadador-club').value = data[0].id;
+        document.getElementById('tiempo-inscripcion').value = "NT";
       }
     }
 
@@ -670,7 +746,7 @@
       const delClub = inscritos.filter(i => i.nadadores && i.nadadores.club_id == clubSeleccionadoId);
 
       if (delClub.length === 0) {
-        cont.innerHTML = "Sin inscripciones registradas para este club.";
+        cont.innerHTML = "Sin inscripciones registradas para esta institución.";
         return;
       }
 
@@ -682,7 +758,98 @@
       `).join('');
     }
 
-    async function exportarInscripcionesHYTEK() {
+    // --- EXPORTADOR DIRECTO DE ARCHIVO .HY3 PARA MEET MANAGER 7.0 --- //
+
+    async function exportarInscripcionesHY3() {
+      if (!torneoActivoObj) return alert("No hay torneo activo.");
+
+      const { data: inscripciones } = await supabaseClient
+        .from('inscripciones')
+        .select('*, nadadores(*, clubes(*)), pruebas_torneo(*)')
+        .eq('torneo_id', torneoActivoObj.id);
+
+      if (!inscripciones || inscripciones.length === 0) {
+        return alert("No hay inscripciones registradas en este torneo.");
+      }
+
+      let lineasHY3 = [];
+
+      // Registro A1 - Encabezado HY3
+      lineasHY3.push("A102Hy-Tek Entry File" + " ".repeat(100));
+
+      // Mapa de clubes y nadadores para estructurar el archivo
+      const mapaClubes = {};
+
+      inscripciones.forEach(i => {
+        const club = i.nadadores.clubes || { id: 99, nombre_club: "INDEPENDIENTE" };
+        const clubKey = club.id;
+
+        if (!mapaClubes[clubKey]) {
+          mapaClubes[clubKey] = {
+            info: club,
+            nadadores: {}
+          };
+        }
+
+        const nadador = i.nadadores;
+        const nadadorKey = nadador.id;
+
+        if (!mapaClubes[clubKey].nadadores[nadadorKey]) {
+          mapaClubes[clubKey].nadadores[nadadorKey] = {
+            info: nadador,
+            pruebas: []
+          };
+        }
+
+        mapaClubes[clubKey].nadadores[nadadorKey].pruebas.push({
+          numPrueba: i.pruebas_torneo.numero_prueba,
+          estilo: i.pruebas_torneo.estilo,
+          tiempo: i.tiempo_inscripcion
+        });
+      });
+
+      // Generar estructuras C1, D1 y E1
+      Object.values(mapaClubes).forEach(cObj => {
+        const clubNombre = (cObj.info.nombre_club || "CLUB").padEnd(30, ' ').substring(0, 30);
+        const clubCodigo = (cObj.info.nombre_club || "CLB").substring(0, 4).toUpperCase().padEnd(4, ' ');
+        
+        // Registro C1 - Datos del Club
+        lineasHY3.push(`C101${clubCodigo}${clubNombre}`);
+
+        Object.values(cObj.nadadores).forEach(nObj => {
+          const apellidos = (nObj.info.apellidos || "").padEnd(20, ' ').substring(0, 20);
+          const nombres = (nObj.info.nombres || "").padEnd(20, ' ').substring(0, 20);
+          const genero = nObj.info.genero || "M";
+          const fnac = (nObj.info.fecha_nacimiento || "2010-01-01").replace(/-/g, '');
+
+          // Registro D1 - Atleta
+          lineasHY3.push(`D101${apellidos}${nombres}${genero}${fnac}`);
+
+          nObj.pruebas.forEach(p => {
+            const numPrueba = String(p.numPrueba).padStart(3, '0');
+            const tiempoLimpio = p.tiempo === 'NT' ? '      NT' : p.tiempo.padStart(8, ' ');
+            
+            // Registro E1 - Inscripción a Prueba
+            lineasHY3.push(`E101${numPrueba}${tiempoLimpio}`);
+          });
+        });
+      });
+
+      const contenidoFinalHY3 = lineasHY3.join("\r\n");
+
+      // Descarga del archivo .HY3
+      const blob = new Blob([contenidoFinalHY3], { type: 'text/plain;charset=utf-8' });
+      const link = document.createElement("a");
+      const nombreLimpioTorneo = torneoActivoObj.nombre_torneo.replace(/[^a-zA-Z0-9]/g, '_');
+      
+      link.href = URL.createObjectURL(blob);
+      link.download = `Inscripciones_${nombreLimpioTorneo}.hy3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    async function exportarInscripcionesCSV() {
       if (!torneoActivoObj) return alert("No hay torneo activo.");
 
       const { data: inscripciones } = await supabaseClient
