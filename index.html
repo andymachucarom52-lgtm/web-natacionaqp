@@ -19,6 +19,62 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- JSZip para lectura y exportación ZIP -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <style>
+    /* Estilos para el nuevo modal de inscripciones masivas */
+    #modal-inscripciones-club {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-inscripciones-contenido {
+      background: #ffffff;
+      width: 90%;
+      max-width: 850px;
+      max-height: 90vh;
+      border-radius: 10px;
+      padding: 20px;
+      overflow-y: auto;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+    }
+    .grid-pruebas-contenedor {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #cbd5e1;
+      padding: 10px;
+      border-radius: 6px;
+      background: #f8fafc;
+    }
+    .item-prueba-checkbox {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      padding: 8px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .item-prueba-checkbox:hover {
+      border-color: #0284c7;
+    }
+    .tiempo-input-prueba {
+      font-size: 0.8rem;
+      padding: 4px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      width: 110px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
@@ -52,9 +108,15 @@
         <summary class="acordeon-titulo">📅 Calendario</summary>
         <div class="acordeon-contenido">
           <p>Fechas y horarios oficiales:</p>
+          <a href="https://calendar.google.com/calendar/u/0/embed?src=bf831fe589c0ef4c5f3ff045b8973fb280dd17f4b7a1ee1b4e6f77cf6c166f17@group.calendar.google.com&ctz=America/Lima" 
+             target="_blank" 
+             class="btn-primario" 
+             style="display: block; text-align: center; text-decoration: none; margin-bottom: 10px; background: #0284c7;">
+            ↗️ Abrir Calendario Completo en Nueva Ventana
+          </a>
           <div class="contenedor-iframe">
             <iframe src="https://calendar.google.com/calendar/embed?src=bf831fe589c0ef4c5f3ff045b8973fb280dd17f4b7a1ee1b4e6f77cf6c166f17%40group.calendar.google.com&ctz=America%2FLima&mode=AGENDA" 
-                    style="border: 0;" width="100%" height="450" frameborder="0" scrolling="no">
+                    style="border: 0;" width="100%" height="400" frameborder="0" scrolling="no">
             </iframe>
           </div>
         </div>
@@ -81,58 +143,7 @@
             <label style="font-size: 0.85rem; font-weight: bold; margin-top: 4px; display: block;">Clave de Institución:</label>
             <input type="password" id="clave-club-input" placeholder="Clave asignada" class="input-admin" style="width: 100%; margin-bottom: 6px;">
 
-            <button onclick="ingresarClub()" class="btn-primario" style="width: 100%;">Ingresar a Inscribir</button>
-          </div>
-
-          <!-- Panel de Inscripción del Club -->
-          <div id="panel-inscripcion-club" style="display: none; margin-top: 10px;">
-            <hr>
-            <h4 id="titulo-club-sesion" style="color: #005f73; margin-bottom: 8px;">Club: </h4>
-            
-            <!-- Paso 1: Nadador del padrón -->
-            <div style="margin-bottom: 10px;">
-              <label style="font-size: 0.85rem; font-weight: bold;">1. Selecciona Nadador (Padrón Permanente):</label>
-              <select id="select-nadador-club" class="input-admin" style="width: 100%; margin-top: 4px;" onchange="buscarTiempoAcreditadoNadador()">
-                <option value="">-- Seleccionar Nadador --</option>
-              </select>
-              <button onclick="toggleFormNuevoNadador()" style="background: #2a9d8f; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; margin-top: 6px; cursor: pointer; width: 100%;">
-                ➕ Registrar Nadador Nuevo en Padrón
-              </button>
-            </div>
-
-            <!-- Formulario Nuevo Nadador -->
-            <div id="form-nuevo-nadador" style="display: none; background: #f8fafc; padding: 10px; border: 1px dashed #0077b6; border-radius: 6px; margin-bottom: 10px;">
-              <h5 style="margin: 0 0 6px 0; color: #0077b6;">Crear Nuevo Atleta (Guardado en Padrón)</h5>
-              <input type="text" id="nad-nombres" placeholder="Nombres completas" class="input-admin">
-              <input type="text" id="nad-apellidos" placeholder="Apellidos completos" class="input-admin">
-              <input type="text" id="nad-dni" placeholder="DNI / Carnet de Identidad" class="input-admin">
-              <label style="font-size: 0.75rem;">Fecha de Nacimiento:</label>
-              <input type="date" id="nad-fnac" class="input-admin">
-              <select id="nad-genero" class="input-admin">
-                <option value="M">Masculino</option>
-                <option value="F">Femenino</option>
-              </select>
-              <button onclick="guardarNuevoNadador()" class="btn-primario" style="font-size: 0.8rem; width: 100%;">Guardar Atleta e Inscribir</button>
-            </div>
-
-            <!-- Paso 2: Pruebas -->
-            <div style="margin-bottom: 10px;">
-              <label style="font-size: 0.85rem; font-weight: bold;">2. Selecciona Prueba:</label>
-              <select id="select-prueba-torneo" class="input-admin" style="width: 100%; margin-top: 4px;" onchange="buscarTiempoAcreditadoNadador()">
-                <option value="">-- Seleccionar Prueba --</option>
-              </select>
-
-              <label style="font-size: 0.75rem; font-weight: bold; margin-top: 6px; display: block; color: #0369a1;">Tiempo Acreditado (Cálculo Automático / NT):</label>
-              <input type="text" id="tiempo-inscripcion" class="input-admin" value="NT" readonly style="background-color: #e2e8f0; font-weight: bold; color: #0f172a; cursor: not-allowed;">
-            </div>
-
-            <button id="btn-confirmar-inscripcion" onclick="registrarInscripcionFinal()" class="btn-primario" style="width: 100%;">📥 Guardar Inscripción</button>
-
-            <!-- Lista de Inscritos del Club -->
-            <h5 style="margin-top: 15px; color: #003845;">Inscritos de esta institución para este torneo:</h5>
-            <div id="lista-resumen-inscritos" style="font-size: 0.8rem; max-height: 160px; overflow-y: auto; background: #fff; border: 1px solid #ddd; padding: 5px; border-radius: 4px;">
-              Sin inscripciones aún.
-            </div>
+            <button onclick="ingresarClub()" class="btn-primario" style="width: 100%;">Ingresar a Ventana de Inscripción</button>
           </div>
 
         </div>
@@ -228,6 +239,66 @@
 
   </div>
 
+  <!-- MODAL DE INSCRIPCIONES MÚLTIPLES PARA EL CLUB -->
+  <div id="modal-inscripciones-club">
+    <div class="modal-inscripciones-contenido">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px;">
+        <h3 id="titulo-club-sesion" style="color: #0369a1; margin: 0;">Sistema de Inscripción</h3>
+        <button onclick="cerrarModalInscripciones()" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">✕ Cerrar Ventana</button>
+      </div>
+
+      <!-- Paso 1: Nadador -->
+      <div style="margin-top: 15px;">
+        <label style="font-size: 0.9rem; font-weight: bold;">1. Selecciona Nadador (Padrón Permanente):</label>
+        <select id="select-nadador-club" class="input-admin" style="width: 100%; margin-top: 4px;" onchange="actualizarSeleccionPruebasNadador()">
+          <option value="">-- Seleccionar Nadador --</option>
+        </select>
+        <button onclick="toggleFormNuevoNadador()" style="background: #2a9d8f; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; margin-top: 6px; cursor: pointer;">
+          ➕ Registrar Nadador Nuevo en Padrón
+        </button>
+      </div>
+
+      <!-- Formulario Nuevo Nadador -->
+      <div id="form-nuevo-nadador" style="display: none; background: #f8fafc; padding: 10px; border: 1px dashed #0077b6; border-radius: 6px; margin: 10px 0;">
+        <h5 style="margin: 0 0 6px 0; color: #0077b6;">Crear Nuevo Atleta (Guardado en Padrón)</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <input type="text" id="nad-nombres" placeholder="Nombres completos" class="input-admin">
+          <input type="text" id="nad-apellidos" placeholder="Apellidos completos" class="input-admin">
+          <input type="text" id="nad-dni" placeholder="DNI / Carnet de Identidad" class="input-admin">
+          <div>
+            <label style="font-size: 0.75rem;">Fecha de Nacimiento:</label>
+            <input type="date" id="nad-fnac" class="input-admin">
+          </div>
+          <select id="nad-genero" class="input-admin">
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+          </select>
+        </div>
+        <button onclick="guardarNuevoNadador()" class="btn-primario" style="font-size: 0.8rem; width: 100%; margin-top: 6px;">Guardar Atleta en Padrón</button>
+      </div>
+
+      <!-- Paso 2: Selección Múltiple de Pruebas -->
+      <div style="margin-top: 15px;">
+        <label style="font-size: 0.9rem; font-weight: bold; color: #0284c7;">2. Selecciona las Pruebas en las que participará el nadador:</label>
+        <p style="font-size: 0.75rem; color: #64748b; margin: 2px 0 6px 0;">Marca la casilla de cada prueba. Por defecto el tiempo es NT, pero puedes editarlo manualmente o con Team Manager.</p>
+        
+        <div id="contenedor-pruebas-multiple" class="grid-pruebas-contenedor">
+          <em>Selecciona un nadador para habilitar las pruebas...</em>
+        </div>
+      </div>
+
+      <button id="btn-confirmar-inscripcion" onclick="registrarInscripcionesMultiples()" class="btn-primario" style="width: 100%; margin-top: 15px; background: #0284c7; padding: 12px; font-size: 1rem;">
+        📥 Guardar Todas las Pruebas Seleccionadas
+      </button>
+
+      <!-- Lista de Inscritos del Club -->
+      <h4 style="margin-top: 20px; color: #003845; border-bottom: 1px solid #ccc; padding-bottom: 4px;">Resumen de Inscritos de tu Institución para este Torneo:</h4>
+      <div id="lista-resumen-inscritos" style="font-size: 0.85rem; max-height: 180px; overflow-y: auto; background: #f8fafc; border: 1px solid #ddd; padding: 8px; border-radius: 6px;">
+        Sin inscripciones aún.
+      </div>
+    </div>
+  </div>
+
   <!-- Botón Flotante Admin -->
   <button id="btn-admin-flotante" onclick="abrirAdmin()">🔐 Panel Admin</button>
 
@@ -310,7 +381,6 @@
           📊 Descargar Resumen en Excel / CSV
         </button>
 
-        <!-- SECCIÓN NUEVA: GESTIÓN Y BORRADO DE INSCRIPCIONES -->
         <hr style="margin: 15px 0;">
         <h4 style="color: #d97706;">🗑️ 8. Administrar / Borrar Inscripciones</h4>
         <label style="font-size: 0.8rem; font-weight: bold;">Selecciona Torneo:</label>
@@ -353,9 +423,12 @@
     let clubSeleccionadoId = null;
     let clubObjetoSesion = null;
     let listaTorneosGlobal = [];
+    let pruebasTorneoActivo = [];
 
     function abrirAdmin() { document.getElementById('modal-admin').style.display = 'flex'; }
     function cerrarAdmin() { document.getElementById('modal-admin').style.display = 'none'; }
+    function abrirModalInscripciones() { document.getElementById('modal-inscripciones-club').style.display = 'flex'; }
+    function cerrarModalInscripciones() { document.getElementById('modal-inscripciones-club').style.display = 'none'; }
 
     function validarClave() {
       const inputClave = document.getElementById('clave-admin').value.trim();
@@ -383,6 +456,35 @@
       if (!urlOriginal.includes('tiktok.com')) return urlOriginal;
       const match = urlOriginal.match(/\/video\/(\d+)/);
       return (match && match[1]) ? `https://www.tiktok.com/embed/v2/${match[1]}` : urlOriginal;
+    }
+
+    // --- DECODIFICADOR HY-TEK EN ESPAÑOL --- //
+    function decodificarEstiloHyTek(estiloBruto) {
+      if (!estiloBruto) return "Prueba";
+
+      const estilosCodigos = {
+        '1 0': 'Libre', '1': 'Libre',
+        '2 0': 'Espalda', '2': 'Espalda',
+        '3 0': 'Pecho', '3': 'Pecho',
+        '4 0': 'Mariposa', '4': 'Mariposa',
+        '5 0': 'Comb. Ind.', '5': 'Comb. Ind.',
+        '6 0': 'Posta Libre',
+        '7 0': 'Posta Comb.'
+      };
+
+      let estiloTraducido = estiloBruto;
+
+      // Detectar distancia y código de estilo (ej. "50 1 0" -> "50m Libre")
+      Object.keys(estilosCodigos).forEach(codigo => {
+        const regex = new RegExp(`(\\d+)\\s+${codigo}`, 'g');
+        if (regex.test(estiloTraducido)) {
+          estiloTraducido = estiloTraducido.replace(regex, `$1m ${estilosCodigos[codigo]}`);
+        }
+      });
+
+      // Limpiar prefijos numéricos de prueba si los trae repetidos
+      estiloTraducido = estiloTraducido.replace(/^(Prueba\s*\d+:?\s*)+/i, '');
+      return estiloTraducido.trim();
     }
 
     // --- AUTENTICACIÓN Y GESTIÓN DE CLUBES --- //
@@ -433,38 +535,11 @@
         clubSeleccionadoId = clubId;
         clubObjetoSesion = club;
 
-        document.getElementById('titulo-club-sesion').innerText = `Club / Colegio: ${club.nombre_club}`;
-        document.getElementById('panel-inscripcion-club').style.display = 'block';
+        document.getElementById('titulo-club-sesion').innerText = `Institución: ${club.nombre_club}`;
+        abrirModalInscripciones();
 
         cargarNadadoresClub(clubId);
         cargarResumenInscritos();
-      }
-    }
-
-    // --- BÚSQUEDA AUTOMÁTICA DE TIEMPOS HISTÓRICOS --- //
-
-    async function buscarTiempoAcreditadoNadador() {
-      const nadadorId = document.getElementById('select-nadador-club').value;
-      const pruebaId = document.getElementById('select-prueba-torneo').value;
-      const inputTiempo = document.getElementById('tiempo-inscripcion');
-
-      if (!nadadorId || !pruebaId) {
-        inputTiempo.value = "NT";
-        return;
-      }
-
-      const { data: marcas } = await supabaseClient
-        .from('inscripciones')
-        .select('tiempo_inscripcion')
-        .eq('nadador_id', nadadorId)
-        .neq('tiempo_inscripcion', 'NT')
-        .order('id', { ascending: false })
-        .limit(1);
-
-      if (marcas && marcas.length > 0) {
-        inputTiempo.value = marcas[0].tiempo_inscripcion;
-      } else {
-        inputTiempo.value = "NT";
       }
     }
 
@@ -524,13 +599,12 @@
             if (l.includes(' F ') || l.includes('Damas') || l.includes('Female')) genero = 'F';
             else if (l.includes(' M ') || l.includes('Varones') || l.includes('Male')) genero = 'M';
 
-            let estilo = l.substring(0, 60).replace(/[^a-zA-Z0-9\s]/g, " ").trim();
-            if (estilo.length < 3) estilo = `Prueba ${numPrueba}`;
+            let estiloLimpio = decodificarEstiloHyTek(l.substring(0, 60));
 
             pruebasParaInsertar.push({
               torneo_id: torneoId,
               numero_prueba: numPrueba,
-              estilo: estilo,
+              estilo: estiloLimpio,
               categoria: "Oficial",
               genero: genero
             });
@@ -595,7 +669,6 @@
         selectEdit.innerHTML = opcionesHtml;
         selectBorrar.innerHTML = opcionesHtml;
 
-        // Autoseleccionar torneo activo en la sección de borrado
         if (torneoActivoObj) {
           selectBorrar.value = torneoActivoObj.id;
           cargarInscripcionesParaGestionarAdmin();
@@ -652,7 +725,7 @@
       location.reload();
     }
 
-    // --- NUEVAS FUNCIONES: MÓDULO PARA ELIMINAR INSCRIPCIONES --- //
+    // --- MÓDULO BORRADO DE INSCRIPCIONES --- //
 
     async function cargarInscripcionesParaGestionarAdmin() {
       const torneoId = document.getElementById('select-torneo-borrar-inscripciones').value;
@@ -683,7 +756,7 @@
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 4px 0;">
             <div>
               <strong>${atletaNombre}</strong> (${clubNombre})<br>
-              <small style="color: #666;">Prueba ${numPrueba} | Tiempo: ${i.tiempo_inscripcion}</small>
+              <small style="color: #666;">Prueba ${numPrueba}: ${i.pruebas_torneo ? i.pruebas_torneo.estilo : ''} | Tiempo: ${i.tiempo_inscripcion}</small>
             </div>
             <button onclick="borrarInscripcionIndividual(${i.id})" style="background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 0.75rem;">
               🗑️ Borrar
@@ -719,13 +792,13 @@
       if (error) {
         alert("Error al vaciar inscripciones: " + error.message);
       } else {
-        alert("Todas las inscripciones de este torneo han sido borradas. El torneo quedó limpio para un nuevo evento o pruebas.");
+        alert("Todas las inscripciones de este torneo han sido borradas. El torneo quedó limpio.");
         cargarInscripcionesParaGestionarAdmin();
         if (clubSeleccionadoId) cargarResumenInscritos();
       }
     }
 
-    // --- CARGAS PRINCIPALES --- //
+    // --- CARGAS PRINCIPALES Y SELECCIÓN MÚLTIPLE DE PRUEBAS --- //
 
     async function cargarTorneoActivo() {
       const { data: torneos, error } = await supabaseClient
@@ -797,7 +870,7 @@
         toggleFormNuevoNadador();
         await cargarNadadoresClub(clubSeleccionadoId);
         document.getElementById('select-nadador-club').value = data[0].id;
-        document.getElementById('tiempo-inscripcion').value = "NT";
+        actualizarSeleccionPruebasNadador();
       }
     }
 
@@ -808,28 +881,90 @@
         .eq('torneo_id', torneoId)
         .order('numero_prueba');
 
-      const select = document.getElementById('select-prueba-torneo');
-      if (pruebas) {
-        select.innerHTML = '<option value="">-- Selecciona Prueba --</option>' + 
-          pruebas.map(p => `<option value="${p.id}">Prueba ${p.numero_prueba}: ${p.estilo} (${p.categoria} - ${p.genero})</option>`).join('');
-      }
+      pruebasTorneoActivo = pruebas || [];
     }
 
-    async function registrarInscripcionFinal() {
+    async function actualizarSeleccionPruebasNadador() {
+      const nadadorId = document.getElementById('select-nadador-club').value;
+      const cont = document.getElementById('contenedor-pruebas-multiple');
+
+      if (!nadadorId) {
+        cont.innerHTML = "<em>Selecciona un nadador para habilitar las pruebas...</em>";
+        return;
+      }
+
+      // Consultar pruebas en las que ya está inscrito el nadador en este torneo
+      const { data: inscripcionesExistentes } = await supabaseClient
+        .from('inscripciones')
+        .select('prueba_id, tiempo_inscripcion')
+        .eq('torneo_id', torneoActivoObj.id)
+        .eq('nadador_id', nadadorId);
+
+      const mapaExistentes = {};
+      if (inscripcionesExistentes) {
+        inscripcionesExistentes.forEach(i => {
+          mapaExistentes[i.prueba_id] = i.tiempo_inscripcion;
+        });
+      }
+
+      if (pruebasTorneoActivo.length === 0) {
+        cont.innerHTML = "No hay pruebas cargadas en este torneo.";
+        return;
+      }
+
+      cont.innerHTML = pruebasTorneoActivo.map(p => {
+        const estaInscrito = mapaExistentes.hasOwnProperty(p.id);
+        const tiempoVal = estaInscrito ? mapaExistentes[p.id] : 'NT';
+
+        return `
+          <div class="item-prueba-checkbox">
+            <label style="font-weight: bold; cursor: pointer; font-size: 0.85rem; color: #0f172a;">
+              <input type="checkbox" class="chk-prueba" value="${p.id}" ${estaInscrito ? 'checked' : ''}>
+              Prueba ${p.numero_prueba}: ${p.estilo} (${p.genero})
+            </label>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+              <span style="font-size: 0.75rem; color: #64748b;">Tiempo:</span>
+              <input type="text" id="tiempo_p_${p.id}" class="tiempo-input-prueba" value="${tiempoVal}" placeholder="NT o 00:30.50">
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function registrarInscripcionesMultiples() {
       if (!torneoActivoObj) return alert("No hay torneo activo.");
       const nadadorId = document.getElementById('select-nadador-club').value;
-      const pruebaId = document.getElementById('select-prueba-torneo').value;
-      const tiempo = document.getElementById('tiempo-inscripcion').value || 'NT';
 
-      if (!nadadorId || !pruebaId) return alert("Selecciona el nadador y la prueba.");
+      if (!nadadorId) return alert("Selecciona un nadador primero.");
 
-      const { error } = await supabaseClient.from('inscripciones').insert([
-        { torneo_id: torneoActivoObj.id, nadador_id: nadadorId, prueba_id: pruebaId, tiempo_inscripcion: tiempo }
-      ]);
+      const checkboxes = document.querySelectorAll('.chk-prueba:checked');
+      if (checkboxes.length === 0) {
+        return alert("Selecciona al menos una prueba para inscribir al atleta.");
+      }
 
-      if (error) alert("Error inscribiendo: " + error.message);
-      else {
-        alert("Inscripción guardada exitosamente.");
+      let inscripcionesAInsertar = [];
+      checkboxes.forEach(chk => {
+        const pruebaId = chk.value;
+        const tiempoInput = document.getElementById(`tiempo_p_${pruebaId}`).value.trim() || 'NT';
+        
+        inscripcionesAInsertar.push({
+          torneo_id: torneoActivoObj.id,
+          nadador_id: nadadorId,
+          prueba_id: pruebaId,
+          tiempo_inscripcion: tiempoInput
+        });
+      });
+
+      // Limpiar inscripciones previas de este nadador en este torneo para evitar duplicados al re-guardar
+      await supabaseClient.from('inscripciones').delete().eq('torneo_id', torneoActivoObj.id).eq('nadador_id', nadadorId);
+
+      // Insertar masivamente las pruebas seleccionadas
+      const { error } = await supabaseClient.from('inscripciones').insert(inscripcionesAInsertar);
+
+      if (error) {
+        alert("Error al guardar inscripciones: " + error.message);
+      } else {
+        alert(`¡Inscripción exitosa! Se registraron ${inscripcionesAInsertar.length} prueba(s) para este atleta.`);
         cargarResumenInscritos();
       }
     }
@@ -856,9 +991,10 @@
       }
 
       cont.innerHTML = delClub.map(i => `
-        <div style="border-bottom: 1px solid #eee; padding: 4px 0;">
-          <strong>${i.nadadores.apellidos}, ${i.nadadores.nombres}</strong><br>
-          Prueba ${i.pruebas_torneo.numero_prueba}: ${i.pruebas_torneo.estilo} (${i.tiempo_inscripcion})
+        <div style="border-bottom: 1px solid #e2e8f0; padding: 4px 0;">
+          <strong>${i.nadadores.apellidos}, ${i.nadadores.nombres}</strong> — 
+          <span style="color: #0284c7; font-weight: bold;">Prueba ${i.pruebas_torneo.numero_prueba}: ${i.pruebas_torneo.estilo}</span> 
+          (${i.tiempo_inscripcion})
         </div>
       `).join('');
     }
@@ -879,7 +1015,6 @@
 
       let lineasHY3 = [];
 
-      // Registro A1 - Encabezado HY3
       lineasHY3.push("A102Hy-Tek Entry File" + " ".repeat(100));
 
       const mapaClubes = {};
