@@ -21,7 +21,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <style>
-    /* Estilos para el nuevo modal de inscripciones masivas */
+    /* Estilos para el modal de inscripciones masivas */
     #modal-inscripciones-club {
       display: none;
       position: fixed;
@@ -458,11 +458,13 @@
       return (match && match[1]) ? `https://www.tiktok.com/embed/v2/${match[1]}` : urlOriginal;
     }
 
-    // --- DECODIFICADOR HY-TEK EN ESPAÑOL --- //
-    function decodificarEstiloHyTek(estiloBruto) {
-      if (!estiloBruto) return "Prueba";
+    // --- DECODIFICADOR ESPECÍFICO PARA CADENAS HY-TEK EXACTAS --- //
+    function decodificarEstiloHyTek(cadena) {
+      if (!cadena) return "Prueba sin nombre";
 
-      const estilosCodigos = {
+      let str = String(cadena).trim();
+
+      const mapaEstilos = {
         '1 0': 'Libre', '1': 'Libre',
         '2 0': 'Espalda', '2': 'Espalda',
         '3 0': 'Pecho', '3': 'Pecho',
@@ -472,19 +474,38 @@
         '7 0': 'Posta Comb.'
       };
 
-      let estiloTraducido = estiloBruto;
+      try {
+        // 1. Extraer Género (F F I = Damas, F M I = Varones)
+        let genero = "";
+        if (str.includes("F F I") || str.includes("Damas")) genero = "Damas";
+        else if (str.includes("F M I") || str.includes("Varones")) genero = "Varones";
 
-      // Detectar distancia y código de estilo (ej. "50 1 0" -> "50m Libre")
-      Object.keys(estilosCodigos).forEach(codigo => {
-        const regex = new RegExp(`(\\d+)\\s+${codigo}`, 'g');
-        if (regex.test(estiloTraducido)) {
-          estiloTraducido = estiloTraducido.replace(regex, `$1m ${estilosCodigos[codigo]}`);
+        // 2. Extraer Rango de Edades (ej. "7 8", "9 10", "11 12", "13 14")
+        let edatTxt = "";
+        const matchEdad = str.match(/\b(\d{1,2})\s+(\d{1,2})\s+(\d{2,4})\b/);
+        if (matchEdad) {
+          edatTxt = `${matchEdad[1]}-${matchEdad[2]} años`;
         }
-      });
 
-      // Limpiar prefijos numéricos de prueba si los trae repetidos
-      estiloTraducido = estiloTraducido.replace(/^(Prueba\s*\d+:?\s*)+/i, '');
-      return estiloTraducido.trim();
+        // 3. Extraer Distancia y Estilo (ej. "50 1 0" -> 50m Libre)
+        let estiloTxt = "";
+        Object.keys(mapaEstilos).forEach(cod => {
+          const reg = new RegExp(`(\\d{2,4})\\s+${cod}`, 'i');
+          const m = str.match(reg);
+          if (m && !estiloTxt) {
+            estiloTxt = `${m[1]}m ${mapaEstilos[cod]}`;
+          }
+        });
+
+        if (estiloTxt) {
+          return `${genero} ${edatTxt} ${estiloTxt}`.replace(/\s+/g, ' ').trim();
+        }
+      } catch (e) {
+        console.warn("Error parseando prueba:", e);
+      }
+
+      // Si falla, devuelve la cadena filtrando prefijos
+      return str.replace(/^\d+\s+/i, '').replace(/\(X\)/i, '').trim();
     }
 
     // --- AUTENTICACIÓN Y GESTIÓN DE CLUBES --- //
@@ -599,12 +620,10 @@
             if (l.includes(' F ') || l.includes('Damas') || l.includes('Female')) genero = 'F';
             else if (l.includes(' M ') || l.includes('Varones') || l.includes('Male')) genero = 'M';
 
-            let estiloLimpio = decodificarEstiloHyTek(l.substring(0, 60));
-
             pruebasParaInsertar.push({
               torneo_id: torneoId,
               numero_prueba: numPrueba,
-              estilo: estiloLimpio,
+              estilo: l.substring(0, 80),
               categoria: "Oficial",
               genero: genero
             });
@@ -751,12 +770,13 @@
         const clubNombre = i.nadadores && i.nadadores.clubes ? i.nadadores.clubes.nombre_club : 'Sin Club';
         const atletaNombre = i.nadadores ? `${i.nadadores.apellidos}, ${i.nadadores.nombres}` : 'Desconocido';
         const numPrueba = i.pruebas_torneo ? i.pruebas_torneo.numero_prueba : '?';
+        const estiloTraducido = i.pruebas_torneo ? decodificarEstiloHyTek(i.pruebas_torneo.estilo) : '';
 
         return `
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 4px 0;">
             <div>
               <strong>${atletaNombre}</strong> (${clubNombre})<br>
-              <small style="color: #666;">Prueba ${numPrueba}: ${i.pruebas_torneo ? i.pruebas_torneo.estilo : ''} | Tiempo: ${i.tiempo_inscripcion}</small>
+              <small style="color: #666;">Prueba ${numPrueba}: ${estiloTraducido} | Tiempo: ${i.tiempo_inscripcion}</small>
             </div>
             <button onclick="borrarInscripcionIndividual(${i.id})" style="background: #ef4444; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 0.75rem;">
               🗑️ Borrar
@@ -893,7 +913,7 @@
         return;
       }
 
-      // Consultar pruebas en las que ya está inscrito el nadador en este torneo
+      // Consultar pruebas en las que ya está inscrito el nadador
       const { data: inscripcionesExistentes } = await supabaseClient
         .from('inscripciones')
         .select('prueba_id, tiempo_inscripcion')
@@ -915,12 +935,15 @@
       cont.innerHTML = pruebasTorneoActivo.map(p => {
         const estaInscrito = mapaExistentes.hasOwnProperty(p.id);
         const tiempoVal = estaInscrito ? mapaExistentes[p.id] : 'NT';
+        
+        // Formateo del nombre
+        const nombreLimpio = decodificarEstiloHyTek(p.estilo);
 
         return `
           <div class="item-prueba-checkbox">
             <label style="font-weight: bold; cursor: pointer; font-size: 0.85rem; color: #0f172a;">
               <input type="checkbox" class="chk-prueba" value="${p.id}" ${estaInscrito ? 'checked' : ''}>
-              Prueba ${p.numero_prueba}: ${p.estilo} (${p.genero})
+              Prueba ${p.numero_prueba}: ${nombreLimpio}
             </label>
             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
               <span style="font-size: 0.75rem; color: #64748b;">Tiempo:</span>
@@ -955,7 +978,7 @@
         });
       });
 
-      // Limpiar inscripciones previas de este nadador en este torneo para evitar duplicados al re-guardar
+      // Limpiar inscripciones previas del nadador para re-guardar libremente
       await supabaseClient.from('inscripciones').delete().eq('torneo_id', torneoActivoObj.id).eq('nadador_id', nadadorId);
 
       // Insertar masivamente las pruebas seleccionadas
@@ -990,13 +1013,16 @@
         return;
       }
 
-      cont.innerHTML = delClub.map(i => `
-        <div style="border-bottom: 1px solid #e2e8f0; padding: 4px 0;">
-          <strong>${i.nadadores.apellidos}, ${i.nadadores.nombres}</strong> — 
-          <span style="color: #0284c7; font-weight: bold;">Prueba ${i.pruebas_torneo.numero_prueba}: ${i.pruebas_torneo.estilo}</span> 
-          (${i.tiempo_inscripcion})
-        </div>
-      `).join('');
+      cont.innerHTML = delClub.map(i => {
+        const estiloLimpio = i.pruebas_torneo ? decodificarEstiloHyTek(i.pruebas_torneo.estilo) : '';
+        return `
+          <div style="border-bottom: 1px solid #e2e8f0; padding: 4px 0;">
+            <strong>${i.nadadores.apellidos}, ${i.nadadores.nombres}</strong> — 
+            <span style="color: #0284c7; font-weight: bold;">Prueba ${i.pruebas_torneo.numero_prueba}: ${estiloLimpio}</span> 
+            (${i.tiempo_inscripcion})
+          </div>
+        `;
+      }).join('');
     }
 
     // --- EXPORTADOR DIRECTO DE ARCHIVO .HY3 PARA MEET MANAGER 7.0 --- //
@@ -1097,7 +1123,8 @@
 
       inscripciones.forEach(i => {
         const club = i.nadadores.clubes ? i.nadadores.clubes.nombre_club : "Sin Club";
-        csvContent += `"${club}","${i.nadadores.apellidos}","${i.nadadores.nombres}","${i.nadadores.dni_carnet}","${i.nadadores.fecha_nacimiento}","${i.nadadores.genero}","${i.pruebas_torneo.numero_prueba}","${i.pruebas_torneo.estilo}","${i.tiempo_inscripcion}"\n`;
+        const estiloLimpio = i.pruebas_torneo ? decodificarEstiloHyTek(i.pruebas_torneo.estilo) : '';
+        csvContent += `"${club}","${i.nadadores.apellidos}","${i.nadadores.nombres}","${i.nadadores.dni_carnet}","${i.nadadores.fecha_nacimiento}","${i.nadadores.genero}","${i.pruebas_torneo.numero_prueba}","${estiloLimpio}","${i.tiempo_inscripcion}"\n`;
       });
 
       const encodedUri = encodeURI(csvContent);
