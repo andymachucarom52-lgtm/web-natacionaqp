@@ -904,6 +904,7 @@
       pruebasTorneoActivo = pruebas || [];
     }
 
+    // --- FILTRADO DINÁMICO POR EDAD Y GÉNERO DEL NADADOR --- //
     async function actualizarSeleccionPruebasNadador() {
       const nadadorId = document.getElementById('select-nadador-club').value;
       const cont = document.getElementById('contenedor-pruebas-multiple');
@@ -913,7 +914,28 @@
         return;
       }
 
-      // Consultar pruebas en las que ya está inscrito el nadador
+      // 1. Obtener los datos del nadador seleccionado
+      const { data: nadador } = await supabaseClient
+        .from('nadadores')
+        .select('*')
+        .eq('id', nadadorId)
+        .single();
+
+      if (!nadador) {
+        cont.innerHTML = "<em>Error al cargar datos del nadador.</em>";
+        return;
+      }
+
+      // Calcular la edad exacta al inicio del torneo o fecha actual
+      const fechaRef = torneoActivoObj.fecha_inicio ? new Date(torneoActivoObj.fecha_inicio) : new Date();
+      const fechaNac = new Date(nadador.fecha_nacimiento);
+      let edadNadador = fechaRef.getFullYear() - fechaNac.getFullYear();
+      const mes = fechaRef.getMonth() - fechaNac.getMonth();
+      if (mes < 0 || (mes === 0 && fechaRef.getDate() < fechaNac.getDate())) {
+        edadNadador--;
+      }
+
+      // 2. Consultar inscripciones existentes
       const { data: inscripcionesExistentes } = await supabaseClient
         .from('inscripciones')
         .select('prueba_id, tiempo_inscripcion')
@@ -932,11 +954,47 @@
         return;
       }
 
-      cont.innerHTML = pruebasTorneoActivo.map(p => {
+      // 3. Filtrar pruebas elegibles
+      const pruebasFiltradas = pruebasTorneoActivo.filter(p => {
+        const estiloRaw = p.estilo || "";
+
+        // Filtro por Género (F F I = Damas, F M I = Varones)
+        const esDama = nadador.genero === 'F';
+        const esVaron = nadador.genero === 'M';
+
+        if (p.genero && p.genero !== 'X') {
+          if (esDama && p.genero === 'M') return false;
+          if (esVaron && p.genero === 'F') return false;
+        } else {
+          if (esDama && estiloRaw.includes('F M I')) return false;
+          if (esVaron && estiloRaw.includes('F F I')) return false;
+        }
+
+        // Filtro por Rango de Edad (ej. "7 8", "9 10", "11 12", "13 14")
+        const matchEdad = estiloRaw.match(/\b(\d{1,2})\s+(\d{1,2})\s+(\d{2,4})\b/);
+        if (matchEdad) {
+          const edadMin = parseInt(matchEdad[1]);
+          const edadMax = parseInt(matchEdad[2]);
+
+          if (edadNadador < edadMin || edadNadador > edadMax) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      if (pruebasFiltradas.length === 0) {
+        cont.innerHTML = `<div style="padding: 10px; color: #b91c1c; font-size: 0.85rem;">
+          ⚠️ No se encontraron pruebas disponibles para un atleta <strong>${nadador.genero === 'M' ? 'Varón' : 'Dama'} de ${edadNadador} años</strong> en este torneo.
+        </div>`;
+        return;
+      }
+
+      // 4. Renderizar las pruebas habilitadas
+      cont.innerHTML = pruebasFiltradas.map(p => {
         const estaInscrito = mapaExistentes.hasOwnProperty(p.id);
         const tiempoVal = estaInscrito ? mapaExistentes[p.id] : 'NT';
-        
-        // Formateo del nombre
         const nombreLimpio = decodificarEstiloHyTek(p.estilo);
 
         return `
