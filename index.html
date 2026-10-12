@@ -857,13 +857,9 @@
       const confirmacion = confirm(`⚠️ ELIMINACIÓN PERMANENTE:\n\n¿Estás seguro de eliminar el torneo "${nombreTorneo}"?\n\nSe borrarán sus pruebas, inscripciones y el torneo por completo de la lista.`);
       if (!confirmacion) return;
 
-      // 1. Eliminar inscripciones vinculadas
       await supabaseClient.from('inscripciones').delete().eq('torneo_id', torneoId);
-
-      // 2. Eliminar pruebas del torneo
       await supabaseClient.from('pruebas_torneo').delete().eq('torneo_id', torneoId);
 
-      // 3. Eliminar el torneo
       const { error } = await supabaseClient.from('torneos').delete().eq('id', torneoId);
 
       if (error) {
@@ -1201,28 +1197,55 @@
       }).join('');
     }
 
-    // --- EXPORTADOR DIRECTO DE ARCHIVO .HY3 PARA MEET MANAGER 7.0 --- //
+    // --- EXPORTADOR DIRECTO DE ARCHIVO .HY3 COMPATIBLE CON MEET MANAGER --- //
+
+    function calcularChecksumHyTek(lineaSinChecksum) {
+      let sumaImpares = 0;
+      let sumaPares = 0;
+
+      for (let i = 0; i < lineaSinChecksum.length; i++) {
+        const code = lineaSinChecksum.charCodeAt(i);
+        if ((i + 1) % 2 !== 0) {
+          sumaImpares += code;
+        } else {
+          sumaPares += code;
+        }
+      }
+
+      const checksumVal = (sumaImpares * 3 + sumaPares) % 100;
+      return String(checksumVal).padStart(2, '0');
+    }
+
+    function formatearLineaHyTek(codigoRegistro, contenido, longitudTotal = 128) {
+      const cuerpo = (codigoRegistro + contenido).padEnd(longitudTotal - 2, ' ').substring(0, longitudTotal - 2);
+      const checksum = calcularChecksumHyTek(cuerpo);
+      return cuerpo + checksum;
+    }
 
     async function exportarInscripcionesHY3() {
       if (!torneoActivoObj) return alert("No hay torneo activo.");
 
-      const { data: inscripciones } = await supabaseClient
+      const { data: inscripciones, error } = await supabaseClient
         .from('inscripciones')
         .select('*, nadadores(*, clubes(*)), pruebas_torneo(*)')
         .eq('torneo_id', torneoActivoObj.id);
 
-      if (!inscripciones || inscripciones.length === 0) {
+      if (error || !inscripciones || inscripciones.length === 0) {
         return alert("No hay inscripciones registradas en este torneo.");
       }
 
       let lineasHY3 = [];
 
-      lineasHY3.push("A102Hy-Tek Entry File" + " ".repeat(100));
+      // 1. Registro A1 (Encabezado de Archivo Hy-Tek)
+      const fechaTorneo = (torneoActivoObj.fecha_inicio || "2026-01-01").replace(/-/g, '');
+      const nombreTorneoCorto = (torneoActivoObj.nombre_torneo || "TORNEO").substring(0, 30).padEnd(30, ' ');
+      lineasHY3.push(formatearLineaHyTek("A102", `Hy-Tek Entry File${nombreTorneoCorto}${fechaTorneo}`));
 
+      // 2. Agrupar por Clubes y Nadadores
       const mapaClubes = {};
 
       inscripciones.forEach(i => {
-        const club = i.nadadores.clubes || { id: 99, nombre_club: "INDEPENDIENTE" };
+        const club = i.nadadores && i.nadadores.clubes ? i.nadadores.clubes : { id: 99, nombre_club: "INDEPENDIENTE" };
         const clubKey = club.id;
 
         if (!mapaClubes[clubKey]) {
@@ -1233,6 +1256,7 @@
         }
 
         const nadador = i.nadadores;
+        if (!nadador) return;
         const nadadorKey = nadador.id;
 
         if (!mapaClubes[clubKey].nadadores[nadadorKey]) {
@@ -1242,38 +1266,51 @@
           };
         }
 
-        mapaClubes[clubKey].nadadores[nadadorKey].pruebas.push({
-          numPrueba: i.pruebas_torneo.numero_prueba,
-          estilo: i.pruebas_torneo.estilo,
-          tiempo: i.tiempo_inscripcion
-        });
+        if (i.pruebas_torneo) {
+          mapaClubes[clubKey].nadadores[nadadorKey].pruebas.push({
+            numPrueba: i.pruebas_torneo.numero_prueba,
+            estilo: i.pruebas_torneo.estilo,
+            tiempo: i.tiempo_inscripcion || 'NT'
+          });
+        }
       });
 
+      // 3. Generar Registros C1 (Club), D1 (Atleta) y E1 (Prueba)
       Object.values(mapaClubes).forEach(cObj => {
         const clubNombre = (cObj.info.nombre_club || "CLUB").padEnd(30, ' ').substring(0, 30);
-        const clubCodigo = (cObj.info.nombre_club || "CLB").substring(0, 4).toUpperCase().padEnd(4, ' ');
+        const clubCodigo = (cObj.info.nombre_club || "CLB").replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase().padEnd(4, ' ');
         
-        lineasHY3.push(`C101${clubCodigo}${clubNombre}`);
+        // Registro C1 (Club)
+        lineasHY3.push(formatearLineaHyTek("C101", `${clubCodigo}${clubNombre}`));
 
         Object.values(cObj.nadadores).forEach(nObj => {
           const apellidos = (nObj.info.apellidos || "").padEnd(20, ' ').substring(0, 20);
           const nombres = (nObj.info.nombres || "").padEnd(20, ' ').substring(0, 20);
-          const genero = nObj.info.genero || "M";
-          const fnac = (nObj.info.fecha_nacimiento || "2010-01-01").replace(/-/g, '');
+          const genero = (nObj.info.genero || "M").toUpperCase();
+          
+          let fnacStr = "20100101";
+          if (nObj.info.fecha_nacimiento) {
+            fnacStr = nObj.info.fecha_nacimiento.replace(/-/g, '').substring(0, 8);
+          }
 
-          lineasHY3.push(`D101${apellidos}${nombres}${genero}${fnac}`);
+          // Registro D1 (Nadador)
+          lineasHY3.push(formatearLineaHyTek("D101", `${apellidos}${nombres}${genero}${fnacStr}`));
 
+          // Registros E1 (Pruebas del Nadador)
           nObj.pruebas.forEach(p => {
             const numPrueba = String(p.numPrueba).padStart(3, '0');
-            const tiempoLimpio = p.tiempo === 'NT' ? '      NT' : p.tiempo.padStart(8, ' ');
-            
-            lineasHY3.push(`E101${numPrueba}${tiempoLimpio}`);
+            let tiempoLimpio = "      NT";
+            if (p.tiempo && p.tiempo !== "NT") {
+              tiempoLimpio = p.tiempo.replace(/[^0-9.:]/g, '').padStart(8, ' ');
+            }
+
+            lineasHY3.push(formatearLineaHyTek("E101", `${numPrueba}${tiempoLimpio}`));
           });
         });
       });
 
+      // 4. Descargar archivo
       const contenidoFinalHY3 = lineasHY3.join("\r\n");
-
       const blob = new Blob([contenidoFinalHY3], { type: 'text/plain;charset=utf-8' });
       const link = document.createElement("a");
       const nombreLimpioTorneo = torneoActivoObj.nombre_torneo.replace(/[^a-zA-Z0-9]/g, '_');
