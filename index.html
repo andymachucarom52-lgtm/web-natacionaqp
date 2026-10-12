@@ -410,17 +410,19 @@
         </button>
 
         <hr style="margin: 15px 0;">
-        <h4 style="color: #d97706;">🗑️ 8. Administrar / Borrar Inscripciones</h4>
+        <h4 style="color: #d97706;">🗑️ 8. Administrar / Borrar Torneos e Inscripciones</h4>
         <label style="font-size: 0.8rem; font-weight: bold;">Selecciona Torneo:</label>
         <select id="select-torneo-borrar-inscripciones" class="input-admin" onchange="cargarInscripcionesParaGestionarAdmin()" style="width: 100%; margin-bottom: 8px;">
           <option value="">-- Selecciona Torneo --</option>
         </select>
 
         <div id="contenedor-gestion-inscripciones" style="background: #fffbe3; padding: 10px; border: 1px solid #fde047; border-radius: 6px; margin-bottom: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 0.85rem; font-weight: bold;">Listado de Inscritos:</span>
-            <button onclick="vaciarTodasInscripcionesTorneo()" style="background: #dc2626; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold;">
-              🔥 Borrar TODAS las inscripciones de este torneo
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+            <button onclick="vaciarTodasInscripcionesTorneo()" style="background: #d97706; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold; flex: 1;">
+              🧹 Borrar solo Inscripciones
+            </button>
+            <button onclick="eliminarTorneoCompleto()" style="background: #dc2626; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold; flex: 1;">
+              ❌ Eliminar Torneo Completo
             </button>
           </div>
           <div id="lista-inscripciones-admin" style="font-size: 0.8rem; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e5e7eb; padding: 6px; border-radius: 4px;">
@@ -716,6 +718,9 @@
           selectBorrar.value = torneoActivoObj.id;
           cargarInscripcionesParaGestionarAdmin();
         }
+      } else {
+        selectEdit.innerHTML = '<option value="">-- No hay torneos --</option>';
+        selectBorrar.innerHTML = '<option value="">-- No hay torneos --</option>';
       }
     }
 
@@ -768,7 +773,7 @@
       location.reload();
     }
 
-    // --- MÓDULO BORRADO DE INSCRIPCIONES --- //
+    // --- MÓDULO BORRADO DE INSCRIPCIONES Y ELIMINACIÓN DE TORNEO --- //
 
     async function cargarInscripcionesParaGestionarAdmin() {
       const torneoId = document.getElementById('select-torneo-borrar-inscripciones').value;
@@ -836,9 +841,36 @@
       if (error) {
         alert("Error al vaciar inscripciones: " + error.message);
       } else {
-        alert("Todas las inscripciones de este torneo han sido borradas. El torneo quedó limpio.");
+        alert("Todas las inscripciones de este torneo han sido borradas.");
         cargarInscripcionesParaGestionarAdmin();
         if (clubSeleccionadoId) cargarResumenInscritos();
+      }
+    }
+
+    async function eliminarTorneoCompleto() {
+      const torneoId = document.getElementById('select-torneo-borrar-inscripciones').value;
+      if (!torneoId) return alert("Selecciona un torneo para eliminar.");
+
+      const torneo = listaTorneosGlobal.find(t => t.id == torneoId);
+      const nombreTorneo = torneo ? torneo.nombre_torneo : 'este torneo';
+
+      const confirmacion = confirm(`⚠️ ELIMINACIÓN PERMANENTE:\n\n¿Estás seguro de eliminar el torneo "${nombreTorneo}"?\n\nSe borrarán sus pruebas, inscripciones y el torneo por completo de la lista.`);
+      if (!confirmacion) return;
+
+      // 1. Eliminar inscripciones vinculadas
+      await supabaseClient.from('inscripciones').delete().eq('torneo_id', torneoId);
+
+      // 2. Eliminar pruebas del torneo
+      await supabaseClient.from('pruebas_torneo').delete().eq('torneo_id', torneoId);
+
+      // 3. Eliminar el torneo
+      const { error } = await supabaseClient.from('torneos').delete().eq('id', torneoId);
+
+      if (error) {
+        alert("Error al eliminar el torneo: " + error.message);
+      } else {
+        alert("El torneo ha sido eliminado por completo.");
+        location.reload();
       }
     }
 
@@ -1007,10 +1039,8 @@
         return;
       }
 
-      // Mostrar botón de edición si hay nadador seleccionado
       if (btnEditar) btnEditar.style.display = 'inline-block';
 
-      // 1. Obtener los datos del nadador seleccionado
       const { data: nadador } = await supabaseClient
         .from('nadadores')
         .select('*')
@@ -1022,8 +1052,7 @@
         return;
       }
 
-      // Calcular la edad exacta al inicio del torneo o fecha actual
-      const fechaRef = torneoActivoObj.fecha_inicio ? new Date(torneoActivoObj.fecha_inicio) : new Date();
+      const fechaRef = torneoActivoObj && torneoActivoObj.fecha_inicio ? new Date(torneoActivoObj.fecha_inicio) : new Date();
       const fechaNac = new Date(nadador.fecha_nacimiento);
       let edadNadador = fechaRef.getFullYear() - fechaNac.getFullYear();
       const mes = fechaRef.getMonth() - fechaNac.getMonth();
@@ -1031,7 +1060,6 @@
         edadNadador--;
       }
 
-      // 2. Consultar inscripciones existentes
       const { data: inscripcionesExistentes } = await supabaseClient
         .from('inscripciones')
         .select('prueba_id, tiempo_inscripcion')
@@ -1050,11 +1078,9 @@
         return;
       }
 
-      // 3. Filtrar pruebas elegibles
       const pruebasFiltradas = pruebasTorneoActivo.filter(p => {
         const estiloRaw = p.estilo || "";
 
-        // Filtro por Género (F F I = Damas, F M I = Varones)
         const esDama = nadador.genero === 'F';
         const esVaron = nadador.genero === 'M';
 
@@ -1066,7 +1092,6 @@
           if (esVaron && estiloRaw.includes('F F I')) return false;
         }
 
-        // Filtro por Rango de Edad (ej. "7 8", "9 10", "11 12", "13 14")
         const matchEdad = estiloRaw.match(/\b(\d{1,2})\s+(\d{1,2})\s+(\d{2,4})\b/);
         if (matchEdad) {
           const edadMin = parseInt(matchEdad[1]);
@@ -1087,7 +1112,6 @@
         return;
       }
 
-      // 4. Renderizar las pruebas habilitadas
       cont.innerHTML = pruebasFiltradas.map(p => {
         const estaInscrito = mapaExistentes.hasOwnProperty(p.id);
         const tiempoVal = estaInscrito ? mapaExistentes[p.id] : 'NT';
@@ -1132,10 +1156,8 @@
         });
       });
 
-      // Limpiar inscripciones previas del nadador para re-guardar libremente
       await supabaseClient.from('inscripciones').delete().eq('torneo_id', torneoActivoObj.id).eq('nadador_id', nadadorId);
 
-      // Insertar masivamente las pruebas seleccionadas
       const { error } = await supabaseClient.from('inscripciones').insert(inscripcionesAInsertar);
 
       if (error) {
